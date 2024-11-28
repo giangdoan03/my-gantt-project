@@ -21,6 +21,11 @@ const routes = [
     ],
     meta: { requiresAuth: true }, // Route yêu cầu xác thực
   },
+  {
+    path: '/roles',
+    name: 'RolesList',
+    component: () => import('@/views/RolesList.vue'),
+  },
 ];
 
 const router = createRouter({

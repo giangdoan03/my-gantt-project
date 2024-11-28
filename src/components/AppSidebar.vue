@@ -14,12 +14,18 @@
                 <upload-outlined />
                 <span>Uploads</span>
             </a-menu-item>
+            <a-menu-item key="4" @click="navigateToRoles">
+                <team-outlined />
+                <span>Quản lý Vai Trò</span>
+            </a-menu-item>
         </a-menu>
     </a-layout-sider>
 </template>
 
+
 <script>
 import { UserOutlined, VideoCameraOutlined, UploadOutlined } from '@ant-design/icons-vue';
+
 
 export default {
     name: 'AppSidebar',
@@ -38,6 +44,12 @@ export default {
         return {
             selectedKeys: ['1'], // Menu được chọn
         };
+    },
+    methods: {
+        navigateToRoles() {
+            // Điều hướng đến trang danh sách vai trò
+            this.$router.push({ name: 'RolesList' });
+        },
     },
 };
 </script>
