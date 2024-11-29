@@ -1,12 +1,26 @@
 import axios from "axios";
 
 const axiosInstance = axios.create({
-  baseURL: "http://localhost/codeigniter-app/api", // URL backend của bạn
-  timeout: 10000, // Thời gian timeout
+  baseURL: "http://localhost/codeigniter-app/api",
+  timeout: 10000,
   headers: {
-    "Content-Type": "application/json", // Header yêu cầu JSON
+    "Content-Type": "application/json",
   },
-  withCredentials: true, // Kích hoạt credentials (cookie)
 });
+
+// Thêm withCredentials để gửi cookie
+axiosInstance.defaults.withCredentials = true;
+
+// Thêm token vào header Authorization
+axiosInstance.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem("token"); // Lấy token từ localStorage
+    if (token) {
+      config.headers["Authorization"] = `Bearer ${token}`; // Thêm token vào header Authorization
+    }
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
 
 export default axiosInstance;

@@ -12,7 +12,7 @@
 
         <!-- Bảng danh sách vai trò -->
         <a-table :columns="columns" :data-source="filteredRoles" :row-key="record => record.id" bordered
-            pagination="false" class="role-table">
+            :pagination="false" class="role-table">
             <template #actions="{ record }">
                 <a-space>
                     <!-- Nút Sửa -->
@@ -99,6 +99,9 @@ export default {
         },
         editRole(role) {
             this.$router.push({ name: "EditRole", params: { id: role.id } });
+        },
+        filterRoles() {
+            console.log("Tìm kiếm vai trò:", this.searchKeyword);
         },
     },
     mounted() {
