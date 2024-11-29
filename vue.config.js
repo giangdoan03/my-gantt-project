@@ -10,10 +10,7 @@ module.exports = {
   },
   devServer: {
     client: {
-      overlay: {
-        warnings: false,
-        errors: false
-      }
+      overlay: false // Tắt overlay hiển thị lỗi
     }
   }
 };

@@ -24,6 +24,13 @@ const routes = [
         component: DashboardPage,
       },
 
+        // Trang hợp đồng
+        {
+          path: "contracts",
+          name: "SalesContract",
+          component: () => import("@/views/SalesContract.vue"),
+        },
+
       // Trang danh sách vai trò
       {
         path: "roles",

@@ -4,9 +4,13 @@
             <span class="header-title">Hệ Thống Quản Lý</span>
         </div>
         <a-menu v-model:selectedKeys="selectedKeys" theme="dark" mode="inline">
-            <a-menu-item key="1">
+            <a-menu-item key="1" @click="navigateToDashboard">
                 <user-outlined />
                 <span>Dashboard</span>
+            </a-menu-item>
+            <a-menu-item key="6" @click="navigateToContracts">
+                <file-done-outlined />
+                <span>Hợp đồng</span>
             </a-menu-item>
             <a-menu-item key="2">
                 <video-camera-outlined />
@@ -30,7 +34,7 @@
 
 
 <script>
-import { UserOutlined, VideoCameraOutlined, UploadOutlined, TeamOutlined, UsergroupAddOutlined } from '@ant-design/icons-vue';
+import { UserOutlined, VideoCameraOutlined, UploadOutlined, TeamOutlined, UsergroupAddOutlined, FileDoneOutlined} from '@ant-design/icons-vue';
 
 
 export default {
@@ -40,7 +44,8 @@ export default {
         VideoCameraOutlined,
         UploadOutlined,
         TeamOutlined,
-        UsergroupAddOutlined
+        UsergroupAddOutlined,
+        FileDoneOutlined
     },
     props: {
         collapsed: {
@@ -61,6 +66,12 @@ export default {
         navigateToUsers() {
             // Điều hướng đến trang danh sách vai trò
             this.$router.push({ name: 'UserList' });
+        },
+        navigateToContracts() {
+            this.$router.push({ name: "SalesContract" }); // Điều hướng đến trang "Hợp đồng"
+        },
+        navigateToDashboard() {
+            this.$router.push({ name: "DashboardPage" }); // Điều hướng đến trang "Hợp đồng"
         },
     },
 };
@@ -91,5 +102,4 @@ export default {
     line-height: 1.5;
     text-align: center;
 }
-
 </style>
