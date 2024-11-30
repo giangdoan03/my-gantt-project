@@ -1,7 +1,8 @@
 <template>
     <a-layout-sider :collapsed="collapsed" :trigger="null" collapsible>
-        <div class="logo">
-            <span class="header-title">Hệ Thống Quản Lý</span>
+        <div :class="['logo', { 'logo-collapsed': collapsed }]">
+            <span class="header-title" v-if="!collapsed">Hệ Thống Quản Lý</span>
+            <DashboardOutlined class="dashboard-icon" v-else />
         </div>
         <a-menu v-model:selectedKeys="selectedKeys" theme="dark" mode="inline">
             <a-menu-item key="1" @click="navigateToDashboard">
@@ -34,7 +35,7 @@
 
 
 <script>
-import { UserOutlined, VideoCameraOutlined, UploadOutlined, TeamOutlined, UsergroupAddOutlined, FileDoneOutlined} from '@ant-design/icons-vue';
+import { UserOutlined, VideoCameraOutlined, UploadOutlined, TeamOutlined, UsergroupAddOutlined, FileDoneOutlined, DashboardOutlined } from '@ant-design/icons-vue';
 
 
 export default {
@@ -45,7 +46,8 @@ export default {
         UploadOutlined,
         TeamOutlined,
         UsergroupAddOutlined,
-        FileDoneOutlined
+        FileDoneOutlined,
+        DashboardOutlined
     },
     props: {
         collapsed: {
@@ -96,10 +98,37 @@ export default {
 
 .header-title {
     color: #ffffff;
-    font-size: 18px;
+    font-size: 15px;
     font-weight: bold;
     display: block;
     line-height: 1.5;
     text-align: center;
 }
+
+/* Để logo dashboard nổi bật */
+.dashboard-icon {
+    font-size: 24px; /* Làm biểu tượng lớn hơn */
+    color: #ffffff; /* Màu trắng sáng */
+    margin-right: 10px; /* Khoảng cách từ biểu tượng đến các thành phần khác */
+}
+
+/* Biểu tượng trong menu */
+.menu-icon {
+    font-size: 20px; /* Tăng kích thước icon menu */
+    color: #40a9ff; /* Màu xanh dương sáng */
+    transition: color 0.3s ease; /* Hiệu ứng khi hover */
+}
+
+.menu-icon:hover {
+    color: #69c0ff; /* Đổi màu khi hover */
+}
+
+/* Thay đổi màu nền logo */
+.logo {
+    text-align: center;
+    padding: 10px;
+    background-color: #1d1d1d; /* Nền logo */
+    color: #fff; /* Màu chữ trắng */
+}
+
 </style>

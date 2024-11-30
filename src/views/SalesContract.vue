@@ -6,7 +6,8 @@
   
   <script>
   import ResourceLoadDiagram from "@/components/ResourceLoadDiagram.vue";
-  import "../assets/dhtmlxgantt.css"; // CSS tùy chỉnh của bạn
+  import "../assets/css/dhtmlxgantt.css"; // CSS tùy chỉnh của bạn
+  import "../assets/css/controls_styles.css"; // CSS tùy chỉnh của bạn
   
   export default {
     components: {
