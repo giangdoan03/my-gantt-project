@@ -16,92 +16,67 @@
         </div>
         <div id="gantt_here" style="width: 100%; height: calc(100vh - 52px);"></div>
     </div>
-</template>
+</template >
 
 <script>
 import gantt from "@/assets/js/dhtmlxgantt.js";
+import { getTasks, getResources, getPriorities, getOwners } from "@/apis/tasks";
+import { formatDateToVietnameseDateOnly } from "@/utils/customize";
 
 export default {
-    name: "SaveTreeStructure",
+    name: "GanttChart",
     data() {
         return {
-            ganttData: {
-                "data": [
-                    { "id": 100, "text": "Project #1", "type": "project", "start_date": "02-04-2025 00:00", "duration": 28, "progress": 0.6, "end_date": "30-04-2025 00:00", "parent": 0 },
-                    { "id": 1, "text": "Task #1", "type": "task", "start_date": "03-04-2025 00:00", "duration": 7, "parent": 100, "progress": 0.6, "material": [{ "resource_id": "6", "value": 5, "mode": "default" }], "priority": 1, "owner": [2, 3], "end_date": "10-04-2025 00:00" },
-                    { "id": 14, "text": "Task #14", "type": "task", "start_date": "13-04-2025 00:00", "duration": 4, "parent": 1, "progress": 0.2, "material": [{ "resource_id": 6, "value": 3, "mode": "default" }], "end_date": "17-04-2025 00:00", "owner": 0 },
-                    { "id": 2, "text": "Task #2", "type": "task", "start_date": "03-04-2025 00:00", "duration": 7, "parent": 100, "progress": 0.6, "material": [{ "resource_id": "7", "value": 1, "mode": "default" }], "priority": 2, "owner": [2, 3], "end_date": "10-04-2025 00:00" },
-                    { "id": 3, "text": "Task #3", "type": "task", "start_date": "12-04-2025 00:00", "duration": 8, "parent": 100, "progress": 0.6, "material": [{ "resource_id": "10", "value": 2, "mode": "default" }], "owner": [6], "end_date": "20-04-2025 00:00" },
-                    { "id": 5, "text": "Task #5", "type": "task", "start_date": "21-04-2025 00:00", "duration": 4, "parent": 100, "progress": 0.5, "material": [{ "resource_id": "7", "value": 3, "mode": "default" }], "owner": [5], "end_date": "25-04-2025 00:00" },
-                    { "id": 6, "text": "Task #6", "type": "task", "start_date": "27-04-2025 00:00", "duration": 3, "parent": 100, "progress": 0.5, "material": [{ "resource_id": "8", "value": 5, "mode": "default" }], "priority": 2, "owner": [5], "end_date": "30-04-2025 00:00" },
-                    { "id": 7, "text": "Task #7", "type": "task", "start_date": "02-04-2025 00:00", "duration": 13, "parent": 100, "material": [{ "resource_id": "5", "value": 4, "mode": "default" }], "owner": [4], "end_date": "15-04-2025 00:00", "progress": 0 },
-                    { "id": 10, "text": "Task #10", "type": "task", "start_date": "03-04-2025 00:00", "duration": 7, "parent": 7, "progress": 0, "material": [{ "resource_id": "7", "value": 2, "mode": "default" }], "priority": 1, "owner": ["4"], "end_date": "10-04-2025 00:00" },
-                    { "id": 4, "text": "Task #4", "type": "task", "start_date": "14-04-2025 00:00", "duration": 5, "parent": 10, "progress": 0.5, "material": [{ "resource_id": "10", "value": 4, "mode": "default" }, { "resource_id": "7", "value": 4, "mode": "default" }, { "resource_id": "9", "value": 4, "mode": "default" }], "priority": 1, "owner": [6], "end_date": "19-04-2025 00:00" },
-                    { "id": 16, "text": "Task #16", "type": "task", "start_date": "03-04-2025 00:00", "duration": 4, "parent": 4, "progress": 0.5, "material": [{ "resource_id": "6", "value": 5, "mode": "default" }], "priority": 1, "owner": [1, 5], "end_date": "07-04-2025 00:00" },
-                    { "id": 13, "text": "Task #13", "type": "task", "start_date": "10-04-2025 00:00", "duration": 2, "parent": 16, "progress": 0.8, "material": [{ "resource_id": 6, "value": 2, "mode": "default" }], "priority": 3, "owner": [3], "end_date": "12-04-2025 00:00" },
-                    { "id": 17, "text": "Task #17", "type": "task", "start_date": "03-04-2025 00:00", "duration": 4, "parent": 16, "progress": 0.1, "material": [{ "resource_id": "8", "value": 3, "mode": "default" }], "priority": 1, "owner": [4, 5], "end_date": "07-04-2025 00:00" },
-                    { "id": 8, "text": "Task #8", "type": "task", "start_date": "03-04-2025 00:00", "duration": 5, "parent": 10, "progress": 1, "material": [{ "resource_id": 7, "value": 6, "mode": "default" }], "owner": [4], "end_date": "08-04-2025 00:00" },
-                    { "id": 12, "text": "Task #12", "type": "milestone", "start_date": "06-04-2025 00:00", "parent": 8, "progress": 0, "material": [{ "resource_id": "5", "value": 1, "mode": "default" }, { "resource_id": "6", "value": 1, "mode": "default" }, { "resource_id": "7", "value": 1, "mode": "default" }, { "resource_id": "9", "value": 1, "mode": "default" }], "duration": 0, "owner": [4], "end_date": "06-04-2025 00:00" },
-                    { "id": 15, "text": "Task #15", "type": "task", "start_date": "13-04-2025 00:00", "duration": 4, "parent": 10, "progress": 0, "material": [{ "resource_id": "8", "value": 4, "mode": "default" }], "priority": 1, "owner": [1, 6], "end_date": "17-04-2025 00:00" },
-                    { "id": 18, "text": "Task #18", "type": "task", "start_date": "03-04-2025 00:00", "duration": 5, "parent": 15, "progress": 0, "material": [{ "resource_id": 8, "value": 5, "mode": "default" }], "priority": 1, "owner": [4, 6], "end_date": "08-04-2025 00:00" },
-                    { "id": 19, "text": "Task #19", "type": "milestone", "start_date": "20-04-2025 00:00", "parent": 7, "progress": 0, "material": [{ "resource_id": 5, "value": 3, "mode": "default" }], "duration": 0, "owner": [3, 4], "end_date": "20-04-2025 00:00" },
-                    { "id": 9, "text": "Task #9", "type": "task", "start_date": "03-04-2025 00:00", "duration": 6, "parent": 100, "material": [], "progress": 0.8, "owner": [2, 3], "end_date": "09-04-2025 00:00" },
-                    { "id": 11, "text": "Task #11", "type": "task", "start_date": "03-04-2025 00:00", "duration": 2, "parent": 100, "progress": 1, "material": [{ "resource_id": "8", "value": 1, "mode": "default" }], "priority": 2, "owner": [1], "end_date": "05-04-2025 00:00" }
-                ],
-                links: [],
-            },
-            resourceData: [
-                { id: 1, text: "Wood", parent: null },
-                { id: 2, text: "Iron", parent: null },
-                { id: 3, text: "Plastic", parent: null },
-                { id: 4, text: "Concrete", parent: null },
-                { id: 5, text: "Glass", parent: null },
-                { id: 6, text: "Rubber", parent: null },
-                { id: 7, text: "Polymer", parent: null },
-                { id: 8, text: "Plywood", parent: null },
-                { id: 9, text: "Carton", parent: null },
-                { id: 10, text: "Paper", parent: null },
-            ],
+            ganttData: { data: [], links: [] }, // Dữ liệu cho tasks và links
+            resourceData: [], // Dữ liệu cho resources
         };
     },
     methods: {
-        initGantt() {
-            gantt.plugins({
-                grouping: true,
-            });
+        // Fetch data từ API
+        async fetchData() {
+            try {
+                const tasksResponse = await getTasks();
+                const resourcesResponse = await getResources();
+                const prioritiesResponse = await getPriorities();
+                const ownersResponse = await getOwners();
 
-            gantt.serverList("priority", [
-                { key: 1, label: "High" },
-                { key: 2, label: "Normal" },
-                { key: 3, label: "Low" }
-            ]);
-            gantt.serverList("owner", [
-                { key: 1, label: "Ilona" },
-                { key: 2, label: "John" },
-                { key: 3, label: "Mike" },
-                { key: 4, label: "Anna" },
-                { key: 5, label: "Bill" },
-                { key: 6, label: "Floe" },
-            ]);
+                console.log('ownersResponse', ownersResponse);
 
-            function byId(list, id) {
-                for (var i = 0; i < list.length; i++) {
-                    if (list[i].key == id)
-                        return list[i].label || "";
-                }
-                return "";
+
+                // Cập nhật dữ liệu vào Gantt
+                // this.ganttData.data = tasksResponse; // Tasks
+
+                this.ganttData.data = tasksResponse.map((task) => {
+                    // Nếu start_date/end_date là chuỗi
+                    if (typeof task.start_date === "string") {
+                        task.start_date = new Date(task.start_date.replace(" ", "T"));
+                    }
+
+                    if (typeof task.end_date === "string") {
+                        task.end_date = new Date(task.end_date.replace(" ", "T"));
+                    }
+
+                    return task;
+                });
+
+                this.resourceData = resourcesResponse; // Resources
+
+                gantt.serverList("priority", prioritiesResponse); // Priorities
+                gantt.serverList("owner", ownersResponse); // Owners
+
+                // Khởi tạo Gantt sau khi có dữ liệu
+                this.initGantt();
+            } catch (error) {
+                console.error("Failed to fetch data:", error);
             }
+        },
 
-            gantt.templates.grid_row_class = function (start, end, task) {
-                if (task.$virtual) {
-                    return "group_row"
-                }
-            };
+        // Khởi tạo Gantt Chart
+        initGantt() {
+            gantt.plugins({grouping: true});
 
-
-            // Cấu hình Gantt
-
-            gantt.config.open_tree_initially = true; // Mở toàn bộ cây dữ liệu ban đầu
+            // Cấu hình Gantt Chart
+            gantt.config.open_tree_initially = true;
 
 
             gantt.locale.labels.section_split = "Display";
@@ -111,291 +86,121 @@ export default {
             gantt.locale.labels.section_owner = "Owner";
             gantt.locale.labels.section_material = "Material";
 
-            gantt.config.lightbox.sections = [
-                { name: "description", height: 38, map_to: "text", type: "textarea", focus: true },
-                { name: "priority", type: "select", map_to: "priority", options: gantt.serverList("priority") },
-                { name: "owner", type: "checkbox", map_to: "owner", options: gantt.serverList("owner") },
-                { name: "material", type: "resources", map_to: "material", options: gantt.serverList("material"), default_value: 10 },
-                {
-                    name: "split", type: "checkbox", map_to: "render", options: [
-                        { key: "split", label: "Split Task" }
-                    ]
-                },
-                { name: "time", type: "duration", map_to: "auto" }
-            ];
-
-            gantt.config.open_split_tasks = true;
-
-
-
-            // Các cấu hình khác
             gantt.config.scales = [
-                { unit: "month", step: 1, format: "%F, %Y" },
-                { unit: "day", step: 1, format: "%d %M" },
+                {unit: "month", step: 1, format: "%F, %Y"},
+                {unit: "day", step: 1, format: "%d %M"},
             ];
 
             gantt.config.columns = [
-                { name: "text", tree: true, width: 200, resize: true },
-                { name: "start_date", align: "center", width: 100, resize: true },
+                {name: "text", tree: true, width: 200, resize: true},
                 {
-                    name: "owners", width: 70, label: "Owner", align: "center", resize: true, template: function (task) {
-                        var result = "";
-                        var owners = task.owner
-
-                        if (!owners)
-                            return;
-
-                        if (owners.length == 1) {
-                            return byId(gantt.serverList('owner'), owners);
+                    name: "start_date",
+                    align: "center",
+                    width: 100,
+                    resize: true,
+                    template: (task) => {
+                        if (task.start_date instanceof Date) {
+                            return formatDateToVietnameseDateOnly(task.start_date); // Hiển thị ngày/tháng/năm
                         }
-
-                        owners.forEach(function (element) {
-                            var owner = byId(gantt.serverList('owner'), element);
-                            result += "<div class='owner-label' title='" + owner + "'>" + owner.substr(0, 1) + "</div>";
-
-                        });
-
-                        return result
-                    }
-                },
-
-                {
-                    name: "material", align: "center", width: 95, label: "Material", template: function (task) {
-                        if (task.type == gantt.config.types.project) {
-                            return "";
-                        }
-
-                        var store = gantt.getDatastore("resource");
-                        var assignments = task[gantt.config.resource_property];
-
-                        if (!assignments || !assignments.length) {
-                            return "Unassigned";
-                        }
-
-                        if (assignments.length == 1 && assignments[0].resource_id) {
-                            return store.getItem(assignments[0].resource_id).text;
-                        }
-
-                        var result = "";
-                        assignments.forEach(function (assignment) {
-                            var owner = store.getItem(assignment.resource_id);
-                            if (!owner)
-                                return;
-                            result += "<div class='owner-label' title='" + owner.text + "'>" + owner.text.substr(0, 1) + "</div>";
-
-                        });
-
-                        return result;
-                    }, resize: true
+                        return "N/A";
+                    },
                 },
                 {
-                    name: "priority", label: "Priority", width: 65, align: "center", resize: true, template: function (task) {
-                        return byId(gantt.serverList('priority'), task.priority);
-                    }
+                    name: "owners",
+                    width: 70,
+                    label: "Owner",
+                    align: "center",
+                    resize: true,
+                    template: (task) => this.renderOwners(task),
                 },
-                { name: "duration", label: "Duration", width: 40, align: "center", resize: true },
-                { name: "add", width: 44 }
+                {
+                    name: "priority",
+                    label: "Priority",
+                    width: 65,
+                    align: "center",
+                    resize: true,
+                    template: (task) => this.renderPriorities(task),
+                },
+                {name: "duration", label: "Duration", width: 40, align: "center", resize: true},
+                {name: "add", width: 44},
             ];
 
-            gantt.$resourcesStore = gantt.createDatastore({
-                name: gantt.config.resource_store,
-                type: "treeDatastore",
-                initItem: function (item) {
-                    item.parent = item.parent || gantt.config.root_id;
-                    item[gantt.config.resource_property] = item.parent;
-                    item.open = true;
-                    return item;
-                },
-            });
+            // Cấu hình lightbox
+            gantt.config.lightbox.sections = [
+                {name: "description", height: 38, map_to: "text", type: "textarea", focus: true},
+                {name: "priority", type: "select", map_to: "priority", options: gantt.serverList("priority")},
+                {name: "owner", type: "checkbox", map_to: "owner", options: gantt.serverList("owner")},
+                {name: "time", type: "duration", map_to: "auto"},
+            ];
 
-            gantt.$resourcesStore.attachEvent("onParse", () => {
-                const material = [];
-                gantt.$resourcesStore.eachItem((res) => {
-                    if (!gantt.$resourcesStore.hasChild(res.id)) {
-                        const copy = gantt.copy(res);
-                        copy.key = res.id;
-                        copy.label = res.text;
-                        copy.unit = "hours";
-                        material.push(copy);
-                    }
-                });
-                gantt.updateCollection("material", material);
-            });
-
-            gantt.$resourcesStore.parse(this.resourceData);
-
-
-            gantt.config.order_branch = true;
-            gantt.config.order_branch = "marker";
-            gantt.config.order_branch_free = true;
-            gantt.config.open_tree_initially = true;
-
+            // Khởi tạo dữ liệu vào Gantt
             gantt.init("gantt_here");
             gantt.parse(this.ganttData);
         },
+
+        // Hiển thị groups (resources, owners, priorities)
         showGroups(type) {
             if (type) {
-                gantt.$groupMode = true;
-
-                if (type === "resources") {
-                    // Tạo các nhóm dựa trên resources từ datastore
-                    const groups = gantt.$resourcesStore.getItems().map((item) => {
-                        const group = gantt.copy(item);
-                        group.group_id = group.id; // ID của nhóm
-                        group.id = gantt.uid(); // Tạo ID duy nhất cho mỗi group
-                        return group;
-                    });
-
-                    // Gantt group configuration for resources
-                    gantt.groupBy({
-                        groups, // Danh sách các group (resources)
-                        relation_property: gantt.config.resource_property, // Liên kết giữa task và resource
-                        group_id: "group_id", // ID của group
-                        group_text: "text", // Text hiển thị của group
-                        delimiter: ", ", // Ký tự phân cách nếu có nhiều resource
-                        default_group_label: "No Material", // Label nếu không có resource
-                        save_tree_structure: true, // Giữ lại cấu trúc cây ban đầu của các task
-                    });
-                } else if (type === "owner" || type === "priority") {
-                    // Nhóm theo owner hoặc priority
-                    gantt.groupBy({
-                        groups: gantt.serverList(type), // Lấy danh sách groups từ serverList
-                        relation_property: type, // Liên kết giữa task và group
-                        group_id: "key", // ID của group
-                        group_text: "label", // Text hiển thị của group
-                        default_group_label: type === "priority" ? "Not Assigned" : "Unassigned", // Label mặc định nếu không có giá trị
-                        save_tree_structure: true, // Giữ lại cấu trúc cây ban đầu của các task
-                    });
-                }
+                gantt.groupBy({
+                    groups: gantt.serverList(type),
+                    relation_property: type,
+                    group_id: "key",
+                    group_text: "label",
+                    default_group_label: "Unassigned",
+                });
             } else {
-                // Quay về cấu trúc gốc (không nhóm)
-                gantt.$groupMode = false;
-                gantt.groupBy(false);
+                gantt.groupBy(false); // Không group
             }
         },
 
+        // Thay đổi chế độ reorder
         changeReorderMode(value) {
             gantt.config.order_branch = value;
             gantt.init("gantt_here");
         },
+
+        // Render owners trong cột Owners
+        renderOwners(task) {
+            const owners = gantt.serverList("owner");
+            console.log('owners', owners);
+
+            if (task.owner && Array.isArray(task.owner)) {
+                return task.owner.map((id) => {
+                    const owner = owners.find((o) => o.key === id);
+                    return owner ? `<div>${owner.label}</div>` : "";
+                }).join("");
+            }
+            return "Unassigned";
+        },
+
+        // Render priorities trong cột Priorities
+        renderPriorities(task) {
+            const priorities = gantt.serverList("priority");
+            const priority = priorities.find((p) => p.key === task.priority);
+            console.log('priorities', priorities);
+            console.log('task', task);
+            return priority ? priority.label : "Unassigned";
+        },
     },
+
     mounted() {
-        this.initGantt();
+        this.fetchData(); // Gọi API khi component được mount
     },
 };
 </script>
 
-<style>
-html,
-body {
-    padding: 0px;
-    margin: 0px;
-    height: 100%;
-}
-
+<style scoped>
 #gantt_here {
     width: 100%;
-    height: 800px;
     height: calc(100vh - 52px);
 }
 
-.gantt_grid_scale .gantt_grid_head_cell,
-.gantt_task .gantt_task_scale .gantt_scale_cell {
+.gantt_control {
+    margin-bottom: 10px;
+}
+
+.gantt_grid_scale .gantt_grid_head_cell {
     font-weight: bold;
     font-size: 14px;
-    color: rgba(0, 0, 0, 0.7);
-}
-
-.resource_marker {
-    text-align: center;
-}
-
-.resource_marker div {
-    width: 28px;
-    height: 28px;
-    border-radius: 15px;
-    color: #FFF;
-    margin: 3px;
-    display: inline-flex;
-    justify-content: center;
-    align-items: center;
-}
-
-.resource_marker.workday_ok div {
-    background: var(--dhx-gantt-base-colors-success);
-}
-
-.resource_marker.workday_over div {
-    background: var(--dhx-gantt-base-colors-error);
-}
-
-.folder_row {
-    font-weight: bold;
-}
-
-.highlighted_resource,
-.highlighted_resource.odd {
-    background-color: rgba(255, 251, 224, 0.6);
-}
-
-.resource-controls .gantt_layout_content {
-    padding: 7px;
-    overflow: hidden;
-}
-
-.resource-controls label {
-    margin: 0 10px;
-    vertical-align: bottom;
-    display: inline-block;
-    color: #3e3e3e;
-    padding: 2px;
-    transition: box-shadow 0.2s;
-}
-
-.resource-controls label:hover {
-    box-shadow: 0 2px rgba(84, 147, 255, 0.42);
-}
-
-.resource-controls label.active,
-.resource-controls label.active:hover {
-    box-shadow: 0 2px #5493ffae;
-    color: #1f1f1f;
-}
-
-.resource-controls input {
-    vertical-align: top;
-}
-
-.gantt_task_cell.week_end,
-.gantt_task_cell.no_work_hour {
-    background-color: var(--dhx-gantt-base-colors-background-alt);
-}
-
-.gantt_task_row.gantt_selected .gantt_task_cell.week_end {
-    background-color: var(--dhx-gantt-base-colors-select);
-}
-
-
-.group_row,
-.group_row.odd,
-.gantt_task_row.group_row {
-    background-color: rgba(232, 232, 232, 0.6);
-    font-weight: bold;
-}
-
-.owner-label {
-    width: 20px;
-    height: 20px;
-
-    font-size: 12px;
-    display: inline-flex;
-    justify-content: center;
-    align-items: center;
-    border: 1px solid #cccccc;
-    border-radius: 25px;
-    background: #e6e6e6;
-    color: #6f6f6f;
-    margin: 0 3px;
-    font-weight: bold;
 }
 </style>
