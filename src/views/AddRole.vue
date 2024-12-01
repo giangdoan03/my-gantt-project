@@ -3,10 +3,10 @@
         <h1>{{ isEdit ? "Chỉnh sửa vai trò" : "Thêm vai trò mới" }}</h1>
         <a-form @submit.prevent="handleSubmit">
             <a-form-item label="Tên vai trò">
-                <a-input v-model:value="role.role_name" placeholder="Nhập tên vai trò" />
+                <a-input v-model:value="role.role_name" placeholder="Nhập tên vai trò"/>
             </a-form-item>
             <a-form-item label="Mô tả vai trò">
-                <a-textarea v-model:value="role.description" placeholder="Nhập mô tả vai trò" />
+                <a-textarea v-model:value="role.description" placeholder="Nhập mô tả vai trò"/>
             </a-form-item>
             <a-form-item>
                 <a-button type="primary" html-type="submit">
@@ -21,7 +21,7 @@
 </template>
 
 <script>
-import { getRoleById, createRole, updateRole } from "@/apis/roles";
+import {getRoleById, createRole, updateRole} from "@/apis/roles";
 
 export default {
     data() {
@@ -41,7 +41,7 @@ export default {
         async fetchRole() {
             try {
                 if (this.isEdit) {
-                    const { id } = this.$route.params;
+                    const {id} = this.$route.params;
                     const response = await getRoleById(id);
                     this.role = response.data.data; // Assuming data contains 'role'
                 }
@@ -52,7 +52,7 @@ export default {
         async handleSubmit() {
             try {
                 if (this.isEdit) {
-                    const { id } = this.$route.params;
+                    const {id} = this.$route.params;
                     await updateRole(id, this.role);
                     this.$message.success("Vai trò đã được cập nhật!");
                 } else {

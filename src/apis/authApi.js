@@ -1,27 +1,20 @@
 import axiosInstance from "./axiosInstance";
 
 export async function handleLogin(email, password) {
-  try {
     const response = await axiosInstance.post("/login", { email, password });
-    const token = response.data.token;
-    console.log("Login Success:", token);
-    return response.data; // Trả về dữ liệu từ API
-  } catch (error) {
-    if (error.response) {
-    //   console.error("Login Failed:", error.response.data.message);
-      throw error.response; // Ném lỗi để xử lý ở `methods`
+    if (response.data.status) {
+        return response.data; // Trả về dữ liệu thành công
     } else {
-      console.error("Network Error:", error.message);
-      throw error; // Ném lỗi để xử lý ở `methods`
+        throw new Error(response.data.message || "Đăng nhập thất bại");
     }
-  }
 }
 
+
 export async function handleLogout() {
-    try {
-        const response = await axiosInstance.post("/logout"); // Gọi API logout
-        return response.data; // Trả về phản hồi từ backend
-    } catch (error) {
-        throw error.response?.data || error.message; // Xử lý lỗi
-    }
+	try {
+		const response = await axiosInstance.post("/logout"); // Gọi API logout
+		return response.data; // Trả về phản hồi từ backend
+	} catch (error) {
+		throw error.response?.data || error.message; // Xử lý lỗi
+	}
 }

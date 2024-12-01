@@ -33,6 +33,7 @@
 <script>
 import { handleLogin } from "@/apis/authApi";
 import { message } from "ant-design-vue";
+import { useAuthStore } from "@/stores/authStore";
 
 export default {
     name: "LoginForm",
@@ -48,22 +49,37 @@ export default {
     methods: {
         async handleLogin() {
             try {
-                const response = await handleLogin(this.formState.email, this.formState.password); // Gọi API login
-                localStorage.setItem("auth_token", response.token); // Lưu token vào localStorage
+                // Gọi API login và nhận phản hồi
+                const response = await handleLogin(this.formState.email, this.formState.password);
+
+                if (!response || !response.status) {
+                    throw new Error("Dữ liệu phản hồi không hợp lệ.");
+                }
+
+                // Lưu token và thông tin user vào Pinia
+                const authStore = useAuthStore();
+                authStore.setAuthData(response.token, response.user);
+
+                // Lưu token và thông tin user vào localStorage
+                localStorage.setItem("auth_token", response.token);
+                localStorage.setItem("auth_user", JSON.stringify(response.user));
 
                 // Hiển thị thông báo thành công
-                message.success("Login successful!");
+                message.success(response.message || "Đăng nhập thành công!");
 
                 // Điều hướng sang Dashboard
                 this.$router.push("/dashboard");
             } catch (error) {
                 // Hiển thị thông báo lỗi
                 const errorMessage =
-                    error.response?.data?.message || "Login failed. Please check your credentials.";
+                    error.response?.data?.message ||
+                    error.message ||
+                    "Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin!";
                 console.error("Login failed:", errorMessage);
                 message.error(errorMessage);
             }
-        },
+        }
+        ,
         onFinishFailed(errorInfo) {
             // Hiển thị thông báo khi validation không hợp lệ
             console.log("Validation Failed:", errorInfo);

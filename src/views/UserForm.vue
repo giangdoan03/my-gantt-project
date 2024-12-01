@@ -4,20 +4,21 @@
         <a-form @submit.prevent="handleSubmit" layout="vertical" class="custom-form" :model="user" :rules="formRules">
             <!-- Tên người dùng -->
             <a-form-item label="Tên người dùng" name="name">
-                <a-input v-model:value="user.name" placeholder="Nhập tên người dùng" class="custom-input" />
+                <a-input v-model:value="user.name" placeholder="Nhập tên người dùng" class="custom-input"/>
             </a-form-item>
 
             <!-- Email -->
             <a-form-item label="Email" name="email"
-                :rules="[{ type: 'email', required: true, message: 'Vui lòng nhập email hợp lệ!' }]">
-                <a-input type="email" v-model:value="user.email" placeholder="Nhập email" class="custom-input" />
+                         :rules="[{ type: 'email', required: true, message: 'Vui lòng nhập email hợp lệ!' }]">
+                <a-input type="email" v-model:value="user.email" placeholder="Nhập email" class="custom-input"/>
             </a-form-item>
 
             <!-- Mật khẩu -->
             <a-form-item label="Mật khẩu" name="password"
-                :rules="!isEdit ? [{ required: true, message: 'Vui lòng nhập mật khẩu!' }] : []">
+                         :rules="!isEdit ? [{ required: true, message: 'Vui lòng nhập mật khẩu!' }] : []">
                 <a-input type="password" v-model:value="user.password"
-                    :placeholder="isEdit ? 'Để trống nếu không muốn thay đổi' : 'Nhập mật khẩu'" class="custom-input" />
+                         :placeholder="isEdit ? 'Để trống nếu không muốn thay đổi' : 'Nhập mật khẩu'"
+                         class="custom-input"/>
             </a-form-item>
 
             <!-- Vai trò -->
@@ -43,7 +44,7 @@
 </template>
 
 <script>
-import { getUserById, createUser, updateUser } from "@/apis/users";
+import {getUserById, createUser, updateUser} from "@/apis/users";
 
 export default {
     data() {
@@ -65,10 +66,10 @@ export default {
         // Rules của form
         formRules() {
             return {
-                name: [{ required: true, message: 'Vui lòng nhập tên người dùng!' }],
-                email: [{ type: 'email', required: true, message: 'Vui lòng nhập email hợp lệ!' }],
-                role: [{ required: true, message: 'Vui lòng chọn vai trò!' }],
-                password: !this.isEdit ? [{ required: true, message: 'Vui lòng nhập mật khẩu!' }] : [], // Chỉ validate password khi không phải ở chế độ chỉnh sửa
+                name: [{required: true, message: 'Vui lòng nhập tên người dùng!'}],
+                email: [{type: 'email', required: true, message: 'Vui lòng nhập email hợp lệ!'}],
+                role: [{required: true, message: 'Vui lòng chọn vai trò!'}],
+                password: !this.isEdit ? [{required: true, message: 'Vui lòng nhập mật khẩu!'}] : [], // Chỉ validate password khi không phải ở chế độ chỉnh sửa
             };
         },
     },
@@ -77,7 +78,7 @@ export default {
         async fetchUser() {
             try {
                 if (this.isEdit) {
-                    const { id } = this.$route.params;
+                    const {id} = this.$route.params;
                     const response = await getUserById(id);
                     const userData = response.data.data; // Lấy dữ liệu từ API
 
@@ -98,13 +99,13 @@ export default {
         // Submit dữ liệu
         async handleSubmit() {
             try {
-                const payload = { ...this.user };
+                const payload = {...this.user};
                 if (!payload.password) {
                     delete payload.password; // Xóa mật khẩu nếu để trống
                 }
 
                 if (this.isEdit) {
-                    const { id } = this.$route.params;
+                    const {id} = this.$route.params;
                     await updateUser(id, payload); // Cập nhật người dùng
                     this.$message.success("Người dùng đã được cập nhật!");
                 } else {
@@ -176,6 +177,7 @@ export default {
     background: #e0e0e0;
     color: #000;
 }
+
 .form-actions .cancel-button {
     margin-left: 10px; /* Cách nút "Cập nhật" một khoảng */
 }

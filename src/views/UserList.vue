@@ -3,7 +3,7 @@
         <!-- Thanh tìm kiếm và thêm người dùng -->
         <a-row justify="space-between" class="search-bar">
             <a-col>
-                <a-input v-model="searchKeyword" placeholder="🔍 Tìm kiếm người dùng" @input="filterUsers" />
+                <a-input v-model="searchKeyword" placeholder="🔍 Tìm kiếm người dùng" @input="filterUsers"/>
             </a-col>
             <a-col>
                 <a-button type="primary" @click="addUser">+ Thêm người dùng</a-button>
@@ -19,15 +19,15 @@
                         <!-- Nút Sửa -->
                         <a-tooltip title="Sửa">
                             <a-button type="link" @click="editUser(record)">
-                                <edit-outlined />
+                                <edit-outlined/>
                             </a-button>
                         </a-tooltip>
                         <!-- Nút Xóa -->
                         <a-tooltip title="Xóa">
                             <a-popconfirm title="Bạn có chắc muốn xóa người dùng này không?" ok-text="Xóa"
-                                cancel-text="Hủy" @confirm="deleteUser(record.id)">
+                                          cancel-text="Hủy" @confirm="deleteUser(record.id)">
                                 <a-button type="link" danger>
-                                    <delete-outlined />
+                                    <delete-outlined/>
                                 </a-button>
                             </a-popconfirm>
                         </a-tooltip>
@@ -42,8 +42,8 @@
 </template>
 
 <script>
-import { fetchUsers, deleteUser } from "@/apis/users";
-import { EditOutlined, DeleteOutlined } from "@ant-design/icons-vue";
+import {fetchUsers, deleteUser} from "@/apis/users";
+import {EditOutlined, DeleteOutlined} from "@ant-design/icons-vue";
 
 export default {
     name: "UserList",
@@ -119,11 +119,11 @@ export default {
         },
 
         addUser() {
-            this.$router.push({ name: "AddUser" });
+            this.$router.push({name: "AddUser"});
         },
         editUser(user) {
             if (user && user.id) {
-                this.$router.push({ name: "EditUser", params: { id: user.id } });
+                this.$router.push({name: "EditUser", params: {id: user.id}});
             } else {
                 console.warn("User ID is invalid or undefined.");
             }
