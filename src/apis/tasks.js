@@ -56,13 +56,13 @@ export async function getTasks() {
 
 export async function getResources() {
     const response = await axiosInstance.get("/resources");
-    return response.data.data;
+    return response.data;
 }
 
 export async function getPriorities() {
     const response = await axiosInstance.get("/priorities");
     return response.data.data.map((priority) => ({
-        key: priority.priority_key, // Chuyển thành số nguyên
+        key: parseInt(priority.priority_key, 10), // Chuyển thành số nguyên
         label: priority.label,
     }));
 }
