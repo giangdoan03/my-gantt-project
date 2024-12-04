@@ -47,6 +47,8 @@ export default {
                 this.prioritie_data = await getPriorities();
                 const ownersResponse = await getOwners();
 
+                console.log('ownersResponse',ownersResponse)
+
                 // Khởi tạo Datastore cho resources
                 if (!gantt.$resourcesStore) {
                     gantt.$resourcesStore = gantt.createDatastore({
@@ -212,7 +214,32 @@ export default {
             gantt.config.lightbox.sections = [
                 {name: "description", height: 38, map_to: "text", type: "textarea", focus: true},
                 {name: "priority", type: "select", map_to: "priority", options: gantt.serverList("priority")},
-                {name: "owner", type: "checkbox", map_to: "owner", options: gantt.serverList("owner")},
+                {name: "owner", type: "checkbox", map_to: "owner", options: [
+                        {
+                            key : 1,
+                            label : "Ilona"
+                        },
+                        {
+                            key : 2,
+                            label : "John"
+                        },
+                        {
+                            key : 3,
+                            label : "Mike"
+                        },
+                        {
+                            key : 4,
+                            label : "Anna"
+                        },
+                        {
+                            key : 5,
+                            label : "Bill"
+                        },
+                        {
+                            key : 6,
+                            label : "Floe"
+                        }
+                    ]},
                 {
                     name: "material",
                     type: "resources",
