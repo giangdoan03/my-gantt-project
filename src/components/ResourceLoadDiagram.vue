@@ -46,6 +46,7 @@ export default {
                 this.resourceData = await getResources();
                 this.prioritie_data = await getPriorities();
                 const ownersResponse = await getOwners();
+                this.ownersData = ownersResponse;
 
                 console.log('ownersResponse',ownersResponse)
 
@@ -55,7 +56,6 @@ export default {
                         name: gantt.config.resource_store,
                         type: "treeDatastore",
                         initItem: (item) => {
-                            console.log(item);
                             item.parent = item.parent || gantt.config.root_id;
                             item[gantt.config.resource_property] = item.parent;
                             item.open = true;
@@ -91,7 +91,7 @@ export default {
                     const owners = gantt.serverList("owner");
                     if (owners) {
                         owners.forEach((owner) => {
-                            const copy = { ...owner }; // Tạo bản sao
+                            const copy = {...owner}; // Tạo bản sao
                             copy.key = owner.key;
                             copy.label = owner.label;
                             ownerCollection.push(copy);
@@ -105,12 +105,12 @@ export default {
                 // Parse resources vào Datastore
                 if (gantt.$resourcesStore) {
                     gantt.$resourcesStore.parse(this.resourceData.data);
-                    console.log('gantt.$resourcesStore', gantt.$resourcesStore)
                 }
 
                 // Lưu dữ liệu vào serverList
                 gantt.serverList("priority", this.prioritie_data);
                 gantt.serverList("owner", ownersResponse);
+                gantt.serverList("users", this.resourceData.data);
 
                 // Cập nhật tasks vào Gantt
                 this.ganttData.data = tasksResponse.map((task) => {
@@ -123,6 +123,36 @@ export default {
                 console.error("Failed to fetch data:", error);
             }
         },
+
+        getUserList(data) {
+            var users = [];
+            var uniqueUsers = {};
+            var i;
+            var result = [];
+
+            // Kết hợp tất cả người dùng từ các tác vụ
+            for (i = 0; i < data.length; i++) {
+                users = users.concat(data[i].users);
+            }
+
+            // Lọc các người dùng duy nhất
+            for (i = 0; i < users.length; i++) {
+                uniqueUsers[users[i]] = true;
+            }
+
+            // Sử dụng Object.prototype.hasOwnProperty.call để kiểm tra
+            for (var key in uniqueUsers) {
+                if (Object.prototype.hasOwnProperty.call(uniqueUsers, key)) {
+                    result.push(key);
+                }
+            }
+
+            // Sắp xếp kết quả và trả về mảng các đối tượng {key, label}
+            result.sort();
+            return result.map(function (entry) {
+                return {key: entry, label: entry};
+            });
+        },
         // Khởi tạo Gantt Chart
         initGantt() {
             gantt.plugins({grouping: true});
@@ -134,6 +164,13 @@ export default {
                 }
                 return "";
             }
+
+
+
+            gantt.config.order_branch = true;
+            gantt.config.order_branch = "marker";
+            gantt.config.order_branch_free = true;
+            gantt.config.open_tree_initially = true;
 
 
             // Cấu hình Gantt Chart
@@ -161,7 +198,13 @@ export default {
                     },
                 },
                 {
-                    name: "owners", width: 70, label: "Owner", align: "center", resize: true, template: function (task) {
+                    name: "owners",
+                    width: 70,
+                    label: "Owner",
+                    align: "center",
+                    resize: true,
+                    template: function (task) {
+                        console.log('task', task)
                         var result = "";
                         var owners = task.owner
 
@@ -175,6 +218,29 @@ export default {
                         owners.forEach(function (element) {
                             var owner = byId(gantt.serverList('owner'), element);
                             result += "<div class='owner-label' title='" + owner + "'>" + owner.substr(0, 1) + "</div>";
+
+                        });
+
+                        return result
+                    }
+                },
+                {
+                    name: "users",
+                    label: "Users",
+                    align: "center",
+                    width: 120,
+                    template: function (task) {
+                        var result = "";
+                        var users = task.owner
+                        if (!users)
+                            return;
+
+                        if (users.length == 1) {
+                            return byId(gantt.serverList('owner'), users);
+                        }
+                        users.forEach(function (element) {
+                            var users = byId(gantt.serverList('owner'), element);
+                            result += "<div class='owner-label' title='" + users + "'>" + users.substr(0, 1) + "</div>";
 
                         });
 
@@ -204,12 +270,13 @@ export default {
 
             gantt.locale.labels.section_split = "Display";
 
-            gantt.config.resource_store = "resource";
+            // gantt.config.resource_store = "resource";
             gantt.config.resource_property = "material";
 
             gantt.locale.labels.section_owner = "Owner";
             gantt.locale.labels.section_material = "Material";
             gantt.locale.labels.section_priority = "Priority";
+            gantt.locale.labels.section_assigned = "User";
 
             gantt.config.lightbox.sections = [
                 {name: "description", height: 38, map_to: "text", type: "textarea", focus: true},
@@ -241,6 +308,16 @@ export default {
                         }
                     ]},
                 {
+                    name: "assigned",  // Phần này bạn có thể thay đổi tên tùy ý
+                    type: "checkbox",
+                    map_to: "users",   // Ánh xạ trường "users" từ dữ liệu
+                    options: this.getUserList(this.ganttData.data),// Dữ liệu người dùng// Dữ liệu người dùng
+                    onchange: function() {
+                        console.log("checkbox switched");
+                    }
+                },
+
+                {
                     name: "material",
                     type: "resources",
                     map_to: "material",
@@ -258,7 +335,9 @@ export default {
 
         // Hiển thị groups (resources, owners, priorities)
         showGroups(type) {
+            gantt.$groupMode = true;
             if (type) {
+                console.log('gantt',gantt.serverList(type) )
                 gantt.groupBy({
                     groups: gantt.serverList(type),
                     relation_property: type,
@@ -278,39 +357,38 @@ export default {
         },
 
         // Render owners trong cột Owners
-        renderOwners(task) {
-            const byId = (list, id) => {
-                // Hàm tìm kiếm `owner` trong danh sách theo id
-                const owner = list.find((o) => o.key === id);
-                return owner ? owner.label : "Unknown";
-            };
-
-            const owners = task.owner; // Lấy danh sách `owner` từ task
-            if (!owners || !Array.isArray(owners) || owners.length === 0) {
-                return ""; // Nếu không có `owner`, trả về chuỗi rỗng
-            }
-
-            // Nếu chỉ có một `owner`
-            if (owners.length === 1) {
-                return byId(gantt.serverList("owner"), owners[0]);
-            }
-
-            // Nếu có nhiều `owner`
-            let result = "";
-            owners.forEach((ownerId) => {
-                const owner = byId(gantt.serverList("owner"), ownerId);
-                if (owner) {
-                    result += `<div class='owner-label' title='${owner}'>${owner.substr(0, 1)}</div>`;
-                }
-            });
-
-            return result; // Trả về danh sách HTML các `owner`
-        },
+        // renderOwners(task) {
+        //     const byId = (list, id) => {
+        //         // Hàm tìm kiếm `owner` trong danh sách theo id
+        //         const owner = list.find((o) => o.key === id);
+        //         return owner ? owner.label : "Unknown";
+        //     };
+        //
+        //     const owners = task.owner; // Lấy danh sách `owner` từ task
+        //     if (!owners || !Array.isArray(owners) || owners.length === 0) {
+        //         return ""; // Nếu không có `owner`, trả về chuỗi rỗng
+        //     }
+        //
+        //     // Nếu chỉ có một `owner`
+        //     if (owners.length === 1) {
+        //         return byId(gantt.serverList("owner"), owners[0]);
+        //     }
+        //
+        //     // Nếu có nhiều `owner`
+        //     let result = "";
+        //     owners.forEach((ownerId) => {
+        //         const owner = byId(gantt.serverList("owner"), ownerId);
+        //         if (owner) {
+        //             result += `<div class='owner-label' title='${owner}'>${owner.substr(0, 1)}</div>`;
+        //         }
+        //     });
+        //
+        //     return result; // Trả về danh sách HTML các `owner`
+        // },
 
         // Render priorities trong cột Priorities
         renderPriorities(task) {
             const priorities = gantt.serverList("priority");
-            console.log('priorities',priorities);
             const priority = priorities.find((p) => p.key === Number(task.priority));
             return priority ? priority.label : "Unassigned";
         },
@@ -342,8 +420,7 @@ export default {
                     return `<div class='owner-label' title='${resource.text}'>${resource.text.substr(0, 1)}</div>`;
                 })
                 .join(""); // Trả về danh sách các materials, mỗi material là một `<div>`
-        }
-        ,
+        },
     },
 };
 </script>
