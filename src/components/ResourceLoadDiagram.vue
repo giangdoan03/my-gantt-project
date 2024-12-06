@@ -123,6 +123,7 @@ export default {
         },
 
         getUserList(data) {
+            console.log('data', data)
             var users = [];
             var uniqueUsers = {};
             var i;
@@ -202,7 +203,6 @@ export default {
                     align: "center",
                     resize: true,
                     template: function (task) {
-                        console.log('task', task)
                         var result = "";
                         var owners = task.owner
 
@@ -222,29 +222,29 @@ export default {
                         return result
                     }
                 },
-                {
-                    name: "users",
-                    label: "Users",
-                    align: "center",
-                    width: 120,
-                    template: function (task) {
-                        var result = "";
-                        var users = task.owner
-                        if (!users)
-                            return;
-
-                        if (users.length == 1) {
-                            return byId(gantt.serverList('owner'), users);
-                        }
-                        users.forEach(function (element) {
-                            var users = byId(gantt.serverList('owner'), element);
-                            result += "<div class='owner-label' title='" + users + "'>" + users.substr(0, 1) + "</div>";
-
-                        });
-
-                        return result
-                    }
-                },
+                // {
+                //     name: "users",
+                //     label: "Users",
+                //     align: "center",
+                //     width: 120,
+                //     template: function (task) {
+                //         let result = "";
+                //         var users = task.owner
+                //         if (!users)
+                //             return;
+                //
+                //         if (users.length == 1) {
+                //             return byId(gantt.serverList('owner'), users);
+                //         }
+                //         users.forEach(function (element) {
+                //             var users = byId(gantt.serverList('owner'), element);
+                //             result += "<div class='owner-label' title='" + users + "'>" + users.substr(0, 1) + "</div>";
+                //
+                //         });
+                //
+                //         return result
+                //     }
+                // },
                 {
                     name: "material",
                     align: "center",
@@ -279,16 +279,16 @@ export default {
             gantt.config.lightbox.sections = [
                 {name: "description", height: 38, map_to: "text", type: "textarea", focus: true},
                 {name: "priority", type: "select", map_to: "priority", options: gantt.serverList("priority")},
-                {name: "owner", type: "checkbox", map_to: "owner", options: gantt.serverList("owner")},
-                {
-                    name: "assigned",  // Phần này bạn có thể thay đổi tên tùy ý
-                    type: "checkbox",
-                    map_to: "users",   // Ánh xạ trường "users" từ dữ liệu
-                    options: this.getUserList(this.ganttData.data),// Dữ liệu người dùng// Dữ liệu người dùng
-                    onchange: function() {
-                        console.log("checkbox switched");
-                    }
-                },
+                {name: "owner", type: "checkbox", map_to: "owner_details", options: this.getUserList(this.ganttData.data)},
+                // {
+                //     name: "assigned",  // Phần này bạn có thể thay đổi tên tùy ý
+                //     type: "checkbox",
+                //     map_to: "users",   // Ánh xạ trường "users" từ dữ liệu
+                //     options: this.getUserList(this.ganttData.data),// Dữ liệu người dùng// Dữ liệu người dùng
+                //     onchange: function() {
+                //         console.log("checkbox switched");
+                //     }
+                // },
 
                 {
                     name: "material",
@@ -317,6 +317,7 @@ export default {
                     group_id: "key",
                     group_text: "label",
                     default_group_label: "Unassigned",
+                    save_tree_structure: true
                 });
             } else {
                 gantt.groupBy(false); // Không group
