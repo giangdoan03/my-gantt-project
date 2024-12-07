@@ -165,7 +165,6 @@ export default {
             }
 
 
-
             gantt.config.order_branch = true;
             gantt.config.order_branch = "marker";
             gantt.config.order_branch_free = true;
@@ -183,11 +182,12 @@ export default {
             ];
 
             gantt.config.columns = [
-                {name: "text", tree: true, width: 200, resize: true},
+                {name: "text", tree: true, width: 200, label: "Nội dung công việc", resize: true},
                 {
                     name: "start_date",
                     align: "center",
                     width: 100,
+                    label: "Bắt đầu",
                     resize: true,
                     template: (task) => {
                         if (task.start_date instanceof Date) {
@@ -196,10 +196,24 @@ export default {
                         return "N/A";
                     },
                 },
+                {name: "duration", label: "Số ngày", width: 40, align: "center", resize: true},
+                {
+                    name: "end_date",
+                    align: "center",
+                    width: 100,
+                    label: "Kết thúc",
+                    resize: true,
+                    template: (task) => {
+                        if (task.end_date instanceof Date) {
+                            return formatDateToVietnameseDateOnly(task.end_date);
+                        }
+                        return "N/A";
+                    },
+                },
                 {
                     name: "owners",
                     width: 70,
-                    label: "Owner",
+                    label: "Thực hiện",
                     align: "center",
                     resize: true,
                     template: function (task) {
@@ -255,13 +269,12 @@ export default {
                 },
                 {
                     name: "priority",
-                    label: "Priority",
+                    label: "Độ ưu tiên",
                     width: 65,
                     align: "center",
                     resize: true,
                     template: (task) => this.renderPriorities(task),
                 },
-                {name: "duration", label: "Duration", width: 40, align: "center", resize: true},
                 {name: "add", width: 44},
             ];
             // Cấu hình lightbox
@@ -279,7 +292,12 @@ export default {
             gantt.config.lightbox.sections = [
                 {name: "description", height: 38, map_to: "text", type: "textarea", focus: true},
                 {name: "priority", type: "select", map_to: "priority", options: gantt.serverList("priority")},
-                {name: "owner", type: "checkbox", map_to: "owner_details", options: this.getUserList(this.ganttData.data)},
+                {
+                    name: "owner",
+                    type: "checkbox",
+                    map_to: "owner_details",
+                    options: this.getUserList(this.ganttData.data)
+                },
                 // {
                 //     name: "assigned",  // Phần này bạn có thể thay đổi tên tùy ý
                 //     type: "checkbox",
@@ -310,15 +328,34 @@ export default {
         showGroups(type) {
             gantt.$groupMode = true;
             if (type) {
-                console.log('gantt',gantt.serverList(type) )
-                gantt.groupBy({
-                    groups: gantt.serverList(type),
-                    relation_property: type,
-                    group_id: "key",
-                    group_text: "label",
-                    default_group_label: "Unassigned",
-                    save_tree_structure: true
-                });
+                if (type === "resources") {
+                    // Lấy tất cả các resources từ store và tạo nhóm mới
+                    var groups = gantt.$resourcesStore.getItems().map(function (item) {
+                        var group = gantt.copy(item);
+                        group.group_id = group.id;
+                        group.id = gantt.uid();
+                        return group;
+                    });
+
+                    gantt.groupBy({
+                        groups: groups,
+                        relation_property: gantt.config.resource_property,
+                        group_id: "group_id",
+                        group_text: "text",
+                        delimiter: ", ",
+                        default_group_label: "No Material",
+                        save_tree_structure: true
+                    });
+                } else {
+                    gantt.groupBy({
+                        groups: gantt.serverList(type),
+                        relation_property: type,
+                        group_id: "key",
+                        group_text: "label",
+                        default_group_label: "Unassigned",
+                        save_tree_structure: true
+                    });
+                }
             } else {
                 gantt.groupBy(false); // Không group
             }

@@ -70,7 +70,7 @@ export default {
             this.$router.push({ name: 'UserList' });
         },
         navigateToContracts() {
-            this.$router.push({ name: "SalesContract" }); // Điều hướng đến trang "Hợp đồng"
+            this.$router.push({ name: "ContractsList" }); // Điều hướng tới danh sách hợp đồng
         },
         navigateToDashboard() {
             this.$router.push({ name: "DashboardPage" }); // Điều hướng đến trang "Hợp đồng"
