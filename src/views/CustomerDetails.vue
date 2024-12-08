@@ -9,23 +9,35 @@
         </div>
 
         <!-- Thông tin khách hàng -->
-        <a-card title="Thông Tin Khách Hàng" class="info-card">
+        <a-card title="Thông Tin Khách Hàng" class="info-card" v-if="customer">
             <a-descriptions bordered :column="1">
-                <a-descriptions-item label="Họ và Tên">{{ customer.name }}</a-descriptions-item>
+                <a-descriptions-item label="Họ và Tên">{{ customer.full_name }}</a-descriptions-item>
                 <a-descriptions-item label="Email">{{ customer.email }}</a-descriptions-item>
-                <a-descriptions-item label="Số Điện Thoại">{{ customer.phone }}</a-descriptions-item>
+                <a-descriptions-item label="Số Điện Thoại">{{ customer.phone_number }}</a-descriptions-item>
                 <a-descriptions-item label="Địa Chỉ">{{ customer.address }}</a-descriptions-item>
-                <a-descriptions-item label="Ngày Thêm">{{ customer.createdAt }}</a-descriptions-item>
+                <a-descriptions-item label="Ngày Sinh">{{ customer.date_of_birth }}</a-descriptions-item>
+                <a-descriptions-item label="Giới Tính">{{ customer.gender }}</a-descriptions-item>
+                <a-descriptions-item label="Tên Công Ty">{{ customer.company_name }}</a-descriptions-item>
+                <a-descriptions-item label="Lĩnh Vực Kinh Doanh">{{ customer.business_field }}</a-descriptions-item>
+                <a-descriptions-item label="Nguồn Gốc Công Ty">{{ customer.company_origin }}</a-descriptions-item>
+                <a-descriptions-item label="Loại Hình Công Ty">{{ customer.company_type }}</a-descriptions-item>
+                <a-descriptions-item label="Ngày Thêm">{{ customer.created_at }}</a-descriptions-item>
+                <a-descriptions-item label="Trạng Thái">{{ customer.status }}</a-descriptions-item>
             </a-descriptions>
         </a-card>
 
+        <!-- Hiển thị thông báo đang tải -->
+        <a-spin v-else style="width: 100%; display: flex; justify-content: center; margin-top: 20px;">
+            Đang tải thông tin khách hàng...
+        </a-spin>
+
         <!-- Nhận xét khách hàng -->
-        <a-card title="Đặc điểm khách Hàng" class="comments-card">
+        <a-card title="Nhận Xét Khách Hàng" class="comments-card">
             <a-form @submit.prevent="submitComment">
                 <a-form-item>
                     <a-textarea
                         v-model="newComment"
-                        placeholder="Nhập nhận xét về khách hàng (Lý do không hợp tác...)"
+                        placeholder="Nhập nhận xét về khách hàng"
                         :rows="4"
                     />
                 </a-form-item>
@@ -38,7 +50,7 @@
             <a-list
                 class="comment-list"
                 header="Lịch Sử Nhận Xét"
-                :dataSource="customer.comments"
+                :dataSource="comments"
             >
                 <template #item="{ item }">
                     <a-list-item>
@@ -53,41 +65,57 @@
     </div>
 </template>
 
+
 <script>
+import axios from "axios";
+import { message } from "ant-design-vue";
+
 export default {
     name: "CustomerDetails",
     data() {
         return {
-            customer: {
-                id: 1,
-                name: "Nguyễn Văn A",
-                email: "a@example.com",
-                phone: "0901234567",
-                address: "123 Đường ABC, Phường XYZ, Thành phố HCM",
-                createdAt: "2024-01-01",
-                comments: [
-                    { id: 1, content: "Không đủ điều kiện thanh toán.", date: "2024-01-02" },
-                    { id: 2, content: "Không có nhu cầu hợp tác trong thời điểm hiện tại.", date: "2024-01-10" },
-                ],
-            },
-            newComment: "",
+            customer: null, // Chi tiết khách hàng
+            comments: [], // Danh sách nhận xét
+            newComment: "", // Nhận xét mới
+            loading: false, // Trạng thái tải dữ liệu
         };
     },
+    async mounted() {
+        const customerId = this.$route.params.id; // Lấy ID khách hàng từ URL
+        await this.loadCustomerDetails(customerId); // Tải chi tiết khách hàng
+    },
     methods: {
+        async loadCustomerDetails(id) {
+            this.loading = true;
+            try {
+                const response = await axios.get(`http://localhost/codeigniter-app/api/customers/${id}`);
+                this.customer = response.data; // Lưu chi tiết khách hàng
+                this.comments = [
+                    // Dữ liệu mẫu nhận xét
+                    { id: 1, content: "Nhận xét mẫu 1.", date: "2024-12-01" },
+                    { id: 2, content: "Nhận xét mẫu 2.", date: "2024-12-05" },
+                ];
+            } catch (error) {
+                message.error("Không thể tải thông tin khách hàng.");
+                console.error("Error fetching customer details:", error);
+            } finally {
+                this.loading = false;
+            }
+        },
         submitComment() {
             if (this.newComment.trim() === "") {
-                this.$message.warning("Nhận xét không được để trống.");
+                message.warning("Nhận xét không được để trống.");
                 return;
             }
 
             const newComment = {
-                id: this.customer.comments.length + 1,
+                id: this.comments.length + 1,
                 content: this.newComment,
                 date: new Date().toISOString().split("T")[0],
             };
-            this.customer.comments.push(newComment);
-            this.newComment = ""; // Reset form
-            this.$message.success("Nhận xét đã được lưu.");
+            this.comments.push(newComment);
+            this.newComment = ""; // Reset nhận xét
+            message.success("Nhận xét đã được lưu.");
         },
     },
 };

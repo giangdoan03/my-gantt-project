@@ -91,6 +91,11 @@ const routes = [
                 component: () => import("@/views/CustomerDetails.vue"), // Component chi tiết khách hàng
                 props: true, // Cho phép truyền tham số id dưới dạng props
             },
+            {
+                path: "/customers/edit/:id",
+                name: "EditCustomer",
+                component: () => import("@/views/EditCustomer.vue"), // Component sửa khách hàng
+            },
         ],
     },
 ];
