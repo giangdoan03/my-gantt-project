@@ -13,6 +13,10 @@
                 <file-done-outlined />
                 <span>Hợp đồng</span>
             </a-menu-item>
+            <a-menu-item key="7" @click="navigateToCustomers">
+                <team-outlined />
+                <span>Khách hàng</span>
+            </a-menu-item>
             <a-menu-item key="2">
                 <video-camera-outlined />
                 <span>Videos</span>
@@ -32,6 +36,7 @@
         </a-menu>
     </a-layout-sider>
 </template>
+
 
 
 <script>
@@ -62,18 +67,19 @@ export default {
     },
     methods: {
         navigateToRoles() {
-            // Điều hướng đến trang danh sách vai trò
             this.$router.push({ name: 'RolesList' });
         },
         navigateToUsers() {
-            // Điều hướng đến trang danh sách vai trò
             this.$router.push({ name: 'UserList' });
         },
         navigateToContracts() {
-            this.$router.push({ name: "SalesContract" }); // Điều hướng đến trang "Hợp đồng"
+            this.$router.push({ name: "ContractsList" });
         },
         navigateToDashboard() {
-            this.$router.push({ name: "DashboardPage" }); // Điều hướng đến trang "Hợp đồng"
+            this.$router.push({ name: "DashboardPage" });
+        },
+        navigateToCustomers() {
+            this.$router.push({ name: "CustomersList" }); // Điều hướng tới danh sách khách hàng
         },
     },
 };

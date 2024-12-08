@@ -1,20 +1,22 @@
 <template>
     <div>
-        <div class="gantt_control">
-            <label title="Change the vertical task reorder in the grid">
-                Reorder mode:
-                <select class="reorder_mode" @change="changeReorderMode($event.target.value)">
-                    <option value="marker">Marker</option>
-                    <option value="true">Classic</option>
-                </select>
-            </label>
-            <label>Group:</label>
-            <input type="button" id="default" @click="showGroups()" value="Tree"/>
-            <input type="button" id="resources" @click="showGroups('resources')" value="Group by Resources"/>
-            <input type="button" id="user" @click="showGroups('owner')" value="Group by owner"/>
-            <input type="button" id="priority" @click="showGroups('priority')" value="Group by priority"/>
-        </div>
-        <div id="gantt_here" style="width: 100%; height: calc(100vh - 52px);"></div>
+        <a-spin :spinning="loading" tip="Loading...">
+            <div class="gantt_control">
+<!--                <label title="Change the vertical task reorder in the grid">-->
+<!--                    Reorder mode:-->
+<!--                    <select class="reorder_mode" @change="changeReorderMode($event.target.value)">-->
+<!--                        <option value="marker">Marker</option>-->
+<!--                        <option value="true">Classic</option>-->
+<!--                    </select>-->
+<!--                </label>-->
+                <label>Nhóm:</label>
+                <input type="button" id="default" @click="showGroups()" value="Dạng cây"/>
+                <input type="button" id="resources" @click="showGroups('resources')" value="Tài nguyên"/>
+                <input type="button" id="user" @click="showGroups('owner')" value="Thực hiện"/>
+                <input type="button" id="priority" @click="showGroups('priority')" value="Mức độ ưu tiên"/>
+            </div>
+            <div id="gantt_here" style="width: 100%; height: calc(100vh - 52px);"></div>
+        </a-spin>
     </div>
 </template>
 
@@ -31,6 +33,7 @@ export default {
             resourceData: [], // Dữ liệu cho resources
             prioritiesData: [], // Dữ liệu cho priorities
             ownersData: [], // Dữ liệu cho owners
+            loading: false, // Khởi tạo trạng thái loading
         };
     },
     async mounted() {
@@ -42,13 +45,12 @@ export default {
         // Fetch data từ API
         async fetchData() {
             try {
+                this.loading = true; // Bắt đầu loading
                 const tasksResponse = await getTasks();
                 this.resourceData = await getResources();
                 this.prioritie_data = await getPriorities();
                 const ownersResponse = await getOwners();
                 this.ownersData = ownersResponse;
-
-                console.log('ownersResponse',ownersResponse)
 
                 // Khởi tạo Datastore cho resources
                 if (!gantt.$resourcesStore) {
@@ -121,6 +123,8 @@ export default {
 
             } catch (error) {
                 console.error("Failed to fetch data:", error);
+            } finally {
+                this.loading = false; // Kết thúc trạng thái loading
             }
         },
 
@@ -185,11 +189,12 @@ export default {
             ];
 
             gantt.config.columns = [
-                {name: "text", tree: true, width: 200, resize: true},
+                {name: "text", tree: true, width: 200, label: "Nội dung công việc", resize: true},
                 {
                     name: "start_date",
                     align: "center",
                     width: 100,
+                    label: "Bắt đầu",
                     resize: true,
                     template: (task) => {
                         if (task.start_date instanceof Date) {
@@ -198,10 +203,24 @@ export default {
                         return "N/A";
                     },
                 },
+                {name: "duration", label: "Số ngày", width: 40, align: "center", resize: true},
+                {
+                    name: "end_date",
+                    align: "center",
+                    width: 100,
+                    label: "Kết thúc",
+                    resize: true,
+                    template: (task) => {
+                        if (task.end_date instanceof Date) {
+                            return formatDateToVietnameseDateOnly(task.end_date);
+                        }
+                        return "N/A";
+                    },
+                },
                 {
                     name: "owners",
                     width: 70,
-                    label: "Owner",
+                    label: "Thực hiện",
                     align: "center",
                     resize: true,
                     template: function (task) {
@@ -257,13 +276,12 @@ export default {
                 },
                 {
                     name: "priority",
-                    label: "Priority",
+                    label: "Độ ưu tiên",
                     width: 65,
                     align: "center",
                     resize: true,
                     template: (task) => this.renderPriorities(task),
                 },
-                {name: "duration", label: "Duration", width: 40, align: "center", resize: true},
                 {name: "add", width: 44},
             ];
             // Cấu hình lightbox
@@ -281,17 +299,12 @@ export default {
             gantt.config.lightbox.sections = [
                 {name: "description", height: 38, map_to: "text", type: "textarea", focus: true},
                 {name: "priority", type: "select", map_to: "priority", options: gantt.serverList("priority")},
-
                 {
-                    name: "assigned",  // Phần này bạn có thể thay đổi tên tùy ý
+                    name: "owner",
                     type: "checkbox",
-                    map_to: "users",   // Ánh xạ trường "users" từ dữ liệu
-                    options: this.getUserList(this.ganttData.data),// Dữ liệu người dùng// Dữ liệu người dùng
-                    onchange: function() {
-                        console.log("checkbox switched");
-                    }
+                    map_to: "owner_details",
+                    options: this.getUserList(this.ganttData.data)
                 },
-                {name: "owner", type: "checkbox", map_to: "owner_details", options: this.getUserList(this.ganttData.data)},
                 // {
                 //     name: "assigned",  // Phần này bạn có thể thay đổi tên tùy ý
                 //     type: "checkbox",
@@ -301,6 +314,7 @@ export default {
                 //         console.log("checkbox switched");
                 //     }
                 // },
+
                 {
                     name: "material",
                     type: "resources",
@@ -321,25 +335,44 @@ export default {
         showGroups(type) {
             gantt.$groupMode = true;
             if (type) {
-                console.log('gantt',gantt.serverList(type) )
-                gantt.groupBy({
-                    groups: gantt.serverList(type),
-                    relation_property: type,
-                    group_id: "key",
-                    group_text: "label",
-                    default_group_label: "Unassigned",
-                    save_tree_structure: true
-                });
+                if (type === "resources") {
+                    // Lấy tất cả các resources từ store và tạo nhóm mới
+                    var groups = gantt.$resourcesStore.getItems().map(function (item) {
+                        var group = gantt.copy(item);
+                        group.group_id = group.id;
+                        group.id = gantt.uid();
+                        return group;
+                    });
+
+                    gantt.groupBy({
+                        groups: groups,
+                        relation_property: gantt.config.resource_property,
+                        group_id: "group_id",
+                        group_text: "text",
+                        delimiter: ", ",
+                        default_group_label: "No Material",
+                        save_tree_structure: true
+                    });
+                } else {
+                    gantt.groupBy({
+                        groups: gantt.serverList(type),
+                        relation_property: type,
+                        group_id: "key",
+                        group_text: "label",
+                        default_group_label: "Unassigned",
+                        save_tree_structure: true
+                    });
+                }
             } else {
                 gantt.groupBy(false); // Không group
             }
         },
 
         // Thay đổi chế độ reorder
-        changeReorderMode(value) {
-            gantt.config.order_branch = value;
-            gantt.init("gantt_here");
-        },
+        // changeReorderMode(value) {
+        //     gantt.config.order_branch = value;
+        //     gantt.init("gantt_here");
+        // },
 
         // Render owners trong cột Owners
         // renderOwners(task) {

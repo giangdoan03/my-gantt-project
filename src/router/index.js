@@ -27,6 +27,19 @@ const routes = [
             // Trang hợp đồng
             {
                 path: "contracts",
+                name: "ContractsList",
+                component: () => import("@/views/ContractsList.vue"), // Component hiển thị danh sách hợp đồng
+            },
+            {
+                path: "/contracts/:id",
+                name: "ContractDetails", // Tên route
+                component: () => import("@/views/ContractDetails.vue"), // Component chi tiết hợp đồng
+                props: true, // Cho phép truyền tham số id dưới dạng props
+            },
+
+            // Trang biểu đồ gantt chart
+            {
+                path: "chart",
                 name: "SalesContract",
                 component: () => import("@/views/SalesContract.vue"),
             },
@@ -65,6 +78,18 @@ const routes = [
                 name: "EditUser",
                 component: () => import("@/views/UserForm.vue"), // Form chỉnh sửa người dùng
                 props: true, // Cho phép nhận tham số "id"
+            },
+            // **Trang khách hàng**
+            {
+                path: "customers",
+                name: "CustomersList",
+                component: () => import("@/views/CustomersList.vue"), // Component hiển thị danh sách khách hàng
+            },
+            {
+                path: "/customers/:id",
+                name: "CustomerDetails",
+                component: () => import("@/views/CustomerDetails.vue"), // Component chi tiết khách hàng
+                props: true, // Cho phép truyền tham số id dưới dạng props
             },
         ],
     },
