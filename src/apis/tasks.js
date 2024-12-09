@@ -54,6 +54,17 @@ export async function getTasks() {
     return response.data.data;
 }
 
+// Lấy chi tiết task
+export async function getTaskDetails(taskId) {
+    try {
+        const response = await axiosInstance.get(`/tasks/${taskId}`);
+        return response.data; // Trả về dữ liệu hợp đồng
+    } catch (error) {
+        console.error("Failed to fetch contract details:", error.response?.data || error.message);
+        throw error.response?.data || error.message;
+    }
+}
+
 export async function getResources() {
     const response = await axiosInstance.get("/resources");
     return response.data;
@@ -74,6 +85,16 @@ export async function getOwners() {
         label: owner.label,
     }));
 }
+
+export async function getDepartments() {
+    const response = await axiosInstance.get("/departments");
+    return response.data.map((department) => ({
+        key: parseInt(department.id, 10), // Chuyển thành số nguyên
+        label: department.short_name,
+    }));
+}
+
+
 
 
 

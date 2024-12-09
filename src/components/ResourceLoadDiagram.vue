@@ -22,7 +22,7 @@
 
 <script>
 import gantt from "@/assets/js/dhtmlxgantt.js";
-import {getTasks, getResources, getPriorities, getOwners} from "@/apis/tasks";
+import {getTasks, getResources, getPriorities, getOwners, getDepartments, getTaskDetails} from "@/apis/tasks";
 import {formatDateToVietnameseDateOnly} from "@/utils/customize";
 
 export default {
@@ -33,7 +33,10 @@ export default {
             resourceData: [], // Dữ liệu cho resources
             prioritiesData: [], // Dữ liệu cho priorities
             ownersData: [], // Dữ liệu cho owners
+            department_data: [], // Dữ liệu cho department_data
+            collaboration: [], // Dữ liệu cho department_data
             loading: false, // Khởi tạo trạng thái loading
+            departmentListFilter: '',
         };
     },
     async mounted() {
@@ -49,8 +52,10 @@ export default {
                 const tasksResponse = await getTasks();
                 this.resourceData = await getResources();
                 this.prioritie_data = await getPriorities();
+                this.department_data = await getDepartments();
                 const ownersResponse = await getOwners();
                 this.ownersData = ownersResponse;
+                this.collaboration = JSON.parse(JSON.stringify(this.department_data));
 
                 // Khởi tạo Datastore cho resources
                 if (!gantt.$resourcesStore) {
@@ -113,6 +118,8 @@ export default {
                 gantt.serverList("priority", this.prioritie_data);
                 gantt.serverList("owner", ownersResponse);
                 gantt.serverList("users", this.resourceData.data);
+                gantt.serverList("departments", this.department_data);
+                // gantt.serverList("collaboration", this.collaboration);
 
                 // Cập nhật tasks vào Gantt
                 this.ganttData.data = tasksResponse.map((task) => {
@@ -127,9 +134,31 @@ export default {
                 this.loading = false; // Kết thúc trạng thái loading
             }
         },
+        updateCollaborationOptions(newParam) {
+            const updatedOptions = this.getFormattedDepartmentList(newParam); // Gọi hàm với tham số mới
+            gantt.updateCollection("departments", updatedOptions); // Cập nhật danh sách options
+        },
+        getFormattedDepartmentList(selectedValue) {
+            console.log('selectedValuexxx', selectedValue);
+
+            // Lọc và chuyển đổi mảng `collaboration`
+            let formattedList = this.collaboration
+                .filter(department => department && department.label) // Lọc các mục không hợp lệ
+                .map(department => ({
+                    key: department.label, // Sử dụng giá trị từ `label` làm `key`
+                    label: department.label // Sử dụng giá trị từ `label`
+                }));
+
+            // Loại bỏ các phần tử trùng lặp với `selectedValue`
+            formattedList = formattedList.filter(department => department.label !== selectedValue);
+
+            console.log("Formatted departments after filtering:", formattedList);
+
+            return formattedList;
+        }
+        ,
 
         getUserList(data) {
-            console.log('data', data)
             var users = [];
             var uniqueUsers = {};
             var i;
@@ -162,13 +191,13 @@ export default {
         initGantt() {
             gantt.plugins({grouping: true});
 
-            function byId(list, id) {
-                for (var i = 0; i < list.length; i++) {
-                    if (list[i].key == id)
-                        return list[i].label || "";
-                }
-                return "";
-            }
+            // function byId(list, id) {
+            //     for (var i = 0; i < list.length; i++) {
+            //         if (list[i].key == id)
+            //             return list[i].label || "";
+            //     }
+            //     return "";
+            // }
 
 
 
@@ -224,56 +253,58 @@ export default {
                     align: "center",
                     resize: true,
                     template: function (task) {
-                        var result = "";
-                        var owners = task.owner
+                        let result = "";
+                        var department = task.department;
 
-                        if (!owners)
-                            return;
+                        if (!department) return;
 
-                        if (owners.length == 1) {
-                            return byId(gantt.serverList('owner'), owners);
+                        // Kiểm tra nếu department là một đối tượng
+                        if (!Array.isArray(department)) {
+                            // Xử lý trường hợp department là một đối tượng đơn lẻ
+                            return `<div class='owner-label' title='${department.name}'>${department.short_name}</div>`;
                         }
 
-                        owners.forEach(function (element) {
-                            var owner = byId(gantt.serverList('owner'), element);
-                            result += "<div class='owner-label' title='" + owner + "'>" + owner.substr(0, 1) + "</div>";
-
+                        // Nếu department là mảng, xử lý từng phần tử
+                        department.forEach(function (element) {
+                            result += `<div class='owner-label' title='${element.name}'>${element.short_name}</div>`;
                         });
 
-                        return result
+                        return result;
+                    }
+                },
+                {
+                    name: "material",
+                    label: "Phối hợp",
+                    align: "center",
+                    width: 120,
+                    template: function (task) {
+                        let result = "";
+                        const collaborationDetails = task.collaboration_details;
+                        const iDdepartment = task.department ? task.department.id : null; // Kiểm tra nếu department tồn tại
+
+                        if (!collaborationDetails) return;
+
+                        // Nếu collaborationDetails là mảng, lọc bỏ iDdepartment
+                        const filteredDetails = Array.isArray(collaborationDetails)
+                            ? collaborationDetails.filter(detail => detail.id !== iDdepartment)
+                            : [];
+
+                        // Xử lý từng phần tử sau khi lọc
+                        filteredDetails.forEach(function (element) {
+                            result += `<div class='owner-label' title='${element.name}'>${element.short_name}</div>`;
+                        });
+
+                        return result;
                     }
                 },
                 // {
-                //     name: "users",
-                //     label: "Users",
+                //     name: "material",
                 //     align: "center",
-                //     width: 120,
-                //     template: function (task) {
-                //         let result = "";
-                //         var users = task.owner
-                //         if (!users)
-                //             return;
-                //
-                //         if (users.length == 1) {
-                //             return byId(gantt.serverList('owner'), users);
-                //         }
-                //         users.forEach(function (element) {
-                //             var users = byId(gantt.serverList('owner'), element);
-                //             result += "<div class='owner-label' title='" + users + "'>" + users.substr(0, 1) + "</div>";
-                //
-                //         });
-                //
-                //         return result
-                //     }
+                //     width: 95,
+                //     label: "Phối hợp",
+                //     template: (task) => this.renderMaterials(task),
+                //     resize: true,
                 // },
-                {
-                    name: "material",
-                    align: "center",
-                    width: 95,
-                    label: "Material",
-                    template: (task) => this.renderMaterials(task),
-                    resize: true,
-                },
                 {
                     name: "priority",
                     label: "Độ ưu tiên",
@@ -291,42 +322,82 @@ export default {
             // gantt.config.resource_store = "resource";
             gantt.config.resource_property = "material";
 
-            gantt.locale.labels.section_owner = "Owner";
-            gantt.locale.labels.section_material = "Material";
+            // gantt.config.resource_store = "collaboration_details";
+            gantt.config.resource_property = "collaboration_details";
+
+            gantt.locale.labels.section_department = "Phòng thực hiện";
+            gantt.locale.labels.section_collaboration = "Phòng phối hợp";
+            gantt.locale.labels.section_assigned = "Người thực hiện";
             gantt.locale.labels.section_priority = "Priority";
-            gantt.locale.labels.section_assigned = "User";
+
 
             gantt.config.lightbox.sections = [
                 {name: "description", height: 38, map_to: "text", type: "textarea", focus: true},
                 {name: "priority", type: "select", map_to: "priority", options: gantt.serverList("priority")},
                 {
-                    name: "owner",
-                    type: "checkbox",
-                    map_to: "owner_details",
-                    options: this.getUserList(this.ganttData.data)
-                },
-                // {
-                //     name: "assigned",  // Phần này bạn có thể thay đổi tên tùy ý
-                //     type: "checkbox",
-                //     map_to: "users",   // Ánh xạ trường "users" từ dữ liệu
-                //     options: this.getUserList(this.ganttData.data),// Dữ liệu người dùng// Dữ liệu người dùng
-                //     onchange: function() {
-                //         console.log("checkbox switched");
-                //     }
-                // },
+                    name: "department",
+                    type: "select",
+                    map_to: "department_id",
+                    options: gantt.serverList("departments"),
+                    onchange: (e) => {
+                        const selectedValue = e.target.value; // Lấy giá trị `value` được chọn
+                        console.log("Selected value:", selectedValue);
+
+                        // Lấy danh sách các options từ `gantt.serverList`
+                        const departments = gantt.serverList("departments");
+
+                        // Tìm đối tượng trong danh sách tương ứng với `value` được chọn
+                        const selectedDepartment = departments.find(dept => dept.key == selectedValue);
+
+                        // Lấy giá trị `label` của đối tượng vừa tìm thấy
+                        const selectedLabel = selectedDepartment ? selectedDepartment.label : null;
+                        console.log("Selected label:", selectedLabel);
+
+                        // Gọi hàm từ Vue component nếu cần
+                        const formattedDepartments = this.getFormattedDepartmentList(selectedLabel);
+                        console.log("Formatted departments:", formattedDepartments);
+                    }
+
+                }
+                ,
 
                 {
-                    name: "material",
-                    type: "resources",
-                    map_to: "material",
-                    options: gantt.serverList("material"),
-                    default_value: 1,
+                    name: "collaboration",  // Phần này bạn có thể thay đổi tên tùy ý
+                    type: "checkbox",
+                    map_to: "department_list",   // Ánh xạ trường "collaboration_departments" từ dữ liệu
+                    options: this.getFormattedDepartmentList(''),// Dữ liệu người dùng// Dữ liệu người dùng
+
                 },
+
+                {
+                    name: "assigned",  // Phần này bạn có thể thay đổi tên tùy ý
+                    type: "checkbox",
+                    map_to: "users",   // Ánh xạ trường "users" từ dữ liệu
+                    options: this.getUserList(this.ganttData.data),// Dữ liệu người dùng// Dữ liệu người dùng
+                    onchange: function() {
+                        console.log("checkbox switched");
+                    }
+                },
+
+                // {
+                //     name: "material",
+                //     type: "resources",
+                //     map_to: "material",
+                //     options: gantt.serverList("material"),
+                //     default_value: 1,
+                // },
                 {name: "time", type: "duration", map_to: "auto"},
             ];
 
             // Khởi tạo Gantt
             gantt.init("gantt_here");
+
+            gantt.attachEvent("onTaskClick", async function (selectedValue) {
+                this.updateCollaborationOptions(selectedValue); // Cập nhật danh sách options
+            });
+
+
+
             gantt.parse(this.ganttData);
         },
 
@@ -418,7 +489,10 @@ export default {
             }
 
             const store = gantt.getDatastore("resource"); // Lấy datastore của resources
+            // console.log('store', store)
             const assignments = task[gantt.config.resource_property]; // Lấy materials từ task
+
+            console.log('assignments', assignments)
 
             if (!assignments || !assignments.length) {
                 return "Unassigned"; // Nếu không có material nào, trả về "Unassigned"
@@ -444,16 +518,8 @@ export default {
 </script>
 
 <style>
-html,
-body {
-    padding: 0px;
-    margin: 0px;
-    height: 100%;
-}
-
 #gantt_here {
     width: 100%;
-    height: 800px;
     height: calc(100vh - 52px);
 }
 
@@ -510,6 +576,10 @@ body {
     transition: box-shadow 0.2s;
 }
 
+.gantt_cal_lsection {
+    margin-top: 20px !important;
+}
+
 .resource-controls label:hover {
     box-shadow: 0 2px rgba(84, 147, 255, 0.42);
 }
@@ -541,9 +611,7 @@ body {
 }
 
 .owner-label {
-    width: 20px;
     height: 20px;
-
     font-size: 12px;
     display: inline-flex;
     justify-content: center;
@@ -554,6 +622,7 @@ body {
     color: #6f6f6f;
     margin: 0 3px;
     font-weight: bold;
+    padding: 2px 5px;
 }
 
 .gantt_tree_content {

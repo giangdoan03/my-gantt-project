@@ -19,9 +19,9 @@
                 <a-descriptions-item label="Giới Tính">{{ customer.gender }}</a-descriptions-item>
                 <a-descriptions-item label="Tên Công Ty">{{ customer.company_name }}</a-descriptions-item>
                 <a-descriptions-item label="Lĩnh Vực Kinh Doanh">{{ customer.business_field }}</a-descriptions-item>
-                <a-descriptions-item label="Nguồn Gốc Công Ty">{{ customer.company_origin }}</a-descriptions-item>
+                <a-descriptions-item label="Quốc gia">{{ customer.company_origin }}</a-descriptions-item>
                 <a-descriptions-item label="Loại Hình Công Ty">{{ customer.company_type }}</a-descriptions-item>
-                <a-descriptions-item label="Ngày Thêm">{{ customer.created_at }}</a-descriptions-item>
+                <a-descriptions-item label="Ngày Tạo">{{ customer.created_at }}</a-descriptions-item>
                 <a-descriptions-item label="Trạng Thái">{{ customer.status }}</a-descriptions-item>
             </a-descriptions>
         </a-card>

@@ -50,8 +50,8 @@
                         <a-form-item label="Lĩnh Vực Kinh Doanh">
                             <a-input v-model:value="customer.business_field" placeholder="Nhập lĩnh vực kinh doanh" />
                         </a-form-item>
-                        <a-form-item label="Nguồn Gốc Công Ty">
-                            <a-select v-model:value="customer.company_origin" placeholder="Chọn nguồn gốc công ty">
+                        <a-form-item label="Quốc gia">
+                            <a-select v-model:value="customer.company_origin" placeholder="Chọn quốc gia">
                                 <a-select-option value="Vietnam">Việt Nam</a-select-option>
                                 <a-select-option value="International">Quốc Tế</a-select-option>
                             </a-select>
