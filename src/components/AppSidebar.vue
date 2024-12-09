@@ -21,9 +21,9 @@
                 <video-camera-outlined />
                 <span>Videos</span>
             </a-menu-item>
-            <a-menu-item key="3">
-                <upload-outlined />
-                <span>Uploads</span>
+            <a-menu-item key="3" @click="navigateToDepartmentFile">
+                <folder-outlined />
+                <span>File lưu trữ</span>
             </a-menu-item>
             <a-menu-item key="4" @click="navigateToRoles">
                 <team-outlined />
@@ -40,7 +40,7 @@
 
 
 <script>
-import { UserOutlined, VideoCameraOutlined, UploadOutlined, TeamOutlined, UsergroupAddOutlined, FileDoneOutlined, DashboardOutlined } from '@ant-design/icons-vue';
+import { UserOutlined, VideoCameraOutlined, FolderOutlined, TeamOutlined, UsergroupAddOutlined, FileDoneOutlined, DashboardOutlined } from '@ant-design/icons-vue';
 
 
 export default {
@@ -48,7 +48,7 @@ export default {
     components: {
         UserOutlined,
         VideoCameraOutlined,
-        UploadOutlined,
+        FolderOutlined,
         TeamOutlined,
         UsergroupAddOutlined,
         FileDoneOutlined,
@@ -80,6 +80,9 @@ export default {
         },
         navigateToCustomers() {
             this.$router.push({ name: "CustomersList" }); // Điều hướng tới danh sách khách hàng
+        },
+        navigateToDepartmentFile() {
+            this.$router.push({ name: "DepartmentFile" }); // Điều hướng tới danh sách khách hàng
         },
     },
 };

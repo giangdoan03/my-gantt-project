@@ -22,7 +22,7 @@
 
 <script>
 import gantt from "@/assets/js/dhtmlxgantt.js";
-import {getTasks, getResources, getPriorities, getOwners, getDepartments, getTaskDetails} from "@/apis/tasks";
+import {getTasks, getResources, getPriorities, getOwners, getDepartments} from "@/apis/tasks";
 import {formatDateToVietnameseDateOnly} from "@/utils/customize";
 
 export default {
@@ -133,10 +133,6 @@ export default {
             } finally {
                 this.loading = false; // Kết thúc trạng thái loading
             }
-        },
-        updateCollaborationOptions(newParam) {
-            const updatedOptions = this.getFormattedDepartmentList(newParam); // Gọi hàm với tham số mới
-            gantt.updateCollection("departments", updatedOptions); // Cập nhật danh sách options
         },
         getFormattedDepartmentList(selectedValue) {
             console.log('selectedValuexxx', selectedValue);
@@ -393,7 +389,7 @@ export default {
             gantt.init("gantt_here");
 
             gantt.attachEvent("onTaskClick", async function (selectedValue) {
-                this.updateCollaborationOptions(selectedValue); // Cập nhật danh sách options
+
             });
 
 

@@ -96,6 +96,11 @@ const routes = [
                 name: "EditCustomer",
                 component: () => import("@/views/EditCustomer.vue"), // Component sửa khách hàng
             },
+            {
+                path: "/file-department/",
+                name: "ListFileDepartment",
+                component: () => import("@/views/DepartmentFileArchive.vue"),
+            },
         ],
     },
 ];
