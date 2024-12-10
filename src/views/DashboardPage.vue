@@ -90,8 +90,11 @@ export default {
                     title: "#",
                     dataIndex: "index",
                     key: "index",
-                    customRender: (_, __, index) => index + 1, // Tính toán số thứ tự
+                    customRender: (_, record, index) => {
+                        return index + 1; // Trả về số thứ tự dựa trên chỉ mục (index)
+                    },
                 },
+
                 {
                     title: "Tiêu đề",
                     dataIndex: "title",

@@ -2,13 +2,13 @@
     <div>
         <a-spin :spinning="loading" tip="Loading...">
             <div class="gantt_control">
-<!--                <label title="Change the vertical task reorder in the grid">-->
-<!--                    Reorder mode:-->
-<!--                    <select class="reorder_mode" @change="changeReorderMode($event.target.value)">-->
-<!--                        <option value="marker">Marker</option>-->
-<!--                        <option value="true">Classic</option>-->
-<!--                    </select>-->
-<!--                </label>-->
+                <!--                <label title="Change the vertical task reorder in the grid">-->
+                <!--                    Reorder mode:-->
+                <!--                    <select class="reorder_mode" @change="changeReorderMode($event.target.value)">-->
+                <!--                        <option value="marker">Marker</option>-->
+                <!--                        <option value="true">Classic</option>-->
+                <!--                    </select>-->
+                <!--                </label>-->
                 <label>Nhóm:</label>
                 <input type="button" id="default" @click="showGroups()" value="Dạng cây"/>
                 <input type="button" id="resources" @click="showGroups('resources')" value="Tài nguyên"/>
@@ -106,6 +106,8 @@ export default {
 
                         // Cập nhật Collection "owner"
                         gantt.updateCollection("owner", ownerCollection);
+
+                        console.log('ownerCollection', ownerCollection)
                     }
                 });
 
@@ -194,7 +196,6 @@ export default {
             //     }
             //     return "";
             // }
-
 
 
             gantt.config.order_branch = true;
@@ -354,9 +355,7 @@ export default {
                         console.log("Formatted departments:", formattedDepartments);
                     }
 
-                }
-                ,
-
+                },
                 {
                     name: "collaboration",  // Phần này bạn có thể thay đổi tên tùy ý
                     type: "checkbox",
@@ -370,7 +369,7 @@ export default {
                     type: "checkbox",
                     map_to: "users",   // Ánh xạ trường "users" từ dữ liệu
                     options: this.getUserList(this.ganttData.data),// Dữ liệu người dùng// Dữ liệu người dùng
-                    onchange: function() {
+                    onchange: function () {
                         console.log("checkbox switched");
                     }
                 },
@@ -391,10 +390,41 @@ export default {
             gantt.attachEvent("onTaskClick", async function () {
 
             });
+            // gantt.parse({
+            //     data: [
+            //         { id: 1, text: "Task #1", start_date: "2025-04-01", duration: 5, progress: 0.6, owner: [1, 2], priority: 1 },
+            //         { id: 2, text: "Task #2", start_date: "2025-04-02", duration: 3, progress: 0.4, owner: [2], priority: 2 }
+            //     ]
+            // });
 
-
+            // Đính kèm sự kiện onLightboxSave
+            gantt.attachEvent("onLightboxSave", this.onLightboxSave);
 
             gantt.parse(this.ganttData);
+        },
+
+        onLightboxSave(id, task, isNew) {
+            console.log("Task Saved:", { id, task, isNew });
+
+            const task1 = gantt.getTask(id);
+            console.log("Lightbox Opened for Task:", task1);
+
+            // Lấy giá trị từ các trường đã chọn
+            const priorityId = task.priority; // Lấy ID của priority
+            const ownerIds = task.users; // Lấy danh sách ID của owner
+
+            console.log("Priority ID:", priorityId);
+            console.log("Owner IDs:", ownerIds);
+            console.log("task:", task);
+
+            // Gửi dữ liệu task đến API hoặc xử lý tại đây
+            this.saveTaskToServer(task);
+
+            return true; // Trả về true để đóng lightbox
+        },
+        saveTaskToServer(task) {
+            // Giả sử bạn sử dụng Axios để gửi dữ liệu
+            console.log("Saving task to server:", task);
         },
 
 
@@ -478,37 +508,8 @@ export default {
             return priority ? priority.label : "Unassigned";
         },
 
-        // Render materials trong cột Material
-        renderMaterials(task) {
-            if (task.type === gantt.config.types.project) {
-                return ""; // Nếu task là dự án, không hiển thị material
-            }
 
-            const store = gantt.getDatastore("resource"); // Lấy datastore của resources
-            // console.log('store', store)
-            const assignments = task[gantt.config.resource_property]; // Lấy materials từ task
 
-            console.log('assignments', assignments)
-
-            if (!assignments || !assignments.length) {
-                return "Unassigned"; // Nếu không có material nào, trả về "Unassigned"
-            }
-
-            // Nếu chỉ có 1 material
-            if (assignments.length === 1 && assignments[0].resource_id) {
-                const resource = store.getItem(assignments[0].resource_id);
-                return resource ? resource.text : "Unknown"; // Trả về tên material hoặc "Unknown"
-            }
-
-            // Nếu có nhiều material
-            return assignments
-                .map((assignment) => {
-                    const resource = store.getItem(assignment.resource_id);
-                    if (!resource) return ""; // Nếu không tìm thấy resource, bỏ qua
-                    return `<div class='owner-label' title='${resource.text}'>${resource.text.substr(0, 1)}</div>`;
-                })
-                .join(""); // Trả về danh sách các materials, mỗi material là một `<div>`
-        },
     },
 };
 </script>

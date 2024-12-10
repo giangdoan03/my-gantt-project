@@ -16,7 +16,7 @@
                             type="link"
                             @click="downloadFile(item.id)"
                         >
-                            <download-outlined />
+                            <download-outlined/>
                             Tải xuống
                         </a-button>
                     </template>
@@ -24,13 +24,13 @@
             </template>
         </a-list>
         <div v-else class="no-data">
-            <a-empty description="Không có tài liệu nào được tìm thấy" />
+            <a-empty description="Không có tài liệu nào được tìm thấy"/>
         </div>
     </div>
 </template>
 
 <script>
-import { DownloadOutlined } from "@ant-design/icons-vue";
+import {DownloadOutlined} from "@ant-design/icons-vue";
 
 export default {
     name: "FileList",
@@ -51,9 +51,12 @@ export default {
 };
 </script>
 
-<style scoped>
+<style>
 .no-data {
     text-align: center;
     padding: 20px;
+}
+.ant-list .ant-list-item .ant-list-item-action {
+    margin-left: 0 !important;
 }
 </style>
