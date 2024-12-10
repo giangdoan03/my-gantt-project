@@ -41,32 +41,14 @@
         <!-- Bảng công việc gần đây -->
         <div class="recent-tasks">
             <h3>Công việc gần đây</h3>
-            <table class="tasks-table">
-                <thead>
-                    <tr>
-                        <th>#</th>
-                        <th>Tiêu đề</th>
-                        <th>Người thực hiện</th>
-                        <th>Tiến độ</th>
-                        <th>Ngày hết hạn</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr v-for="(task, index) in recentTasks" :key="index">
-                        <td>{{ index + 1 }}</td>
-                        <td>{{ task.title }}</td>
-                        <td>{{ task.assignee }}</td>
-                        <td>
-                            <div class="progress-container">
-                                <div class="progress-bar" :style="{ width: task.progress + '%' }">
-                                    {{ task.progress }}%
-                                </div>
-                            </div>
-                        </td>
-                        <td>{{ task.dueDate }}</td>
-                    </tr>
-                </tbody>
-            </table>
+            <a-table
+                :columns="columns"
+                :data-source="recentTasks"
+                :scroll="{ x: 800 }"
+                :pagination="{ pageSize: 5 }"
+                bordered
+                row-key="id"
+            />
         </div>
     </div>
 </template>
@@ -84,8 +66,8 @@ import {
     Legend,
     Tooltip,
 } from "chart.js";
-import { handleLogout } from "@/apis/authApi";
-import { message } from "ant-design-vue";
+import {handleLogout} from "@/apis/authApi";
+import {message} from "ant-design-vue";
 
 // Đăng ký các thành phần cần thiết cho Chart.js
 Chart.register(
@@ -103,33 +85,66 @@ export default {
     name: "DashboardPage",
     data() {
         return {
+            columns: [
+                {
+                    title: "#",
+                    dataIndex: "index",
+                    key: "index",
+                    customRender: (_, __, index) => index + 1, // Tính toán số thứ tự
+                },
+                {
+                    title: "Tiêu đề",
+                    dataIndex: "title",
+                    key: "title",
+                },
+                {
+                    title: "Người thực hiện",
+                    dataIndex: "assignee",
+                    key: "assignee",
+                },
+                {
+                    title: "Tiến độ",
+                    dataIndex: "progress",
+                    key: "progress",
+                },
+                {
+                    title: "Ngày hết hạn",
+                    dataIndex: "dueDate",
+                    key: "dueDate",
+                },
+            ],
             recentTasks: [
                 {
-                    title: "Suscipit perferendis nulla sapiente et voluptatem autem.",
+                    id: 1,
+                    title: "Suscipit perferendis nulla sapiente",
                     assignee: "User 3",
                     progress: 95,
                     dueDate: "2024-12-13",
                 },
                 {
-                    title: "Laborum id rem dicta cum.",
+                    id: 2,
+                    title: "Laborum id rem dicta cum",
                     assignee: "User 1",
                     progress: 60,
                     dueDate: "2024-12-08",
                 },
                 {
-                    title: "Tempora vitae commodi ut delectus pariatur ut aut autem.",
+                    id: 3,
+                    title: "Tempora vitae commodi ut delectus",
                     assignee: "User 1",
                     progress: 45,
                     dueDate: "2024-12-03",
                 },
                 {
-                    title: "Totam distinctio velit quod consequatur qui suscipit dolor sequi.",
+                    id: 4,
+                    title: "Totam distinctio velit quod consequatur",
                     assignee: "giang3",
                     progress: 86,
                     dueDate: "2024-12-03",
                 },
                 {
-                    title: "Commodi quibusdam qui quisquam et et culpa.",
+                    id: 5,
+                    title: "Commodi quibusdam qui quisquam et",
                     assignee: "User 2",
                     progress: 22,
                     dueDate: "2024-12-10",
@@ -346,29 +361,49 @@ export default {
     /* Đảm bảo canvas thu nhỏ theo container */
     height: auto;
 }
+
 .dashboard-charts {
-  display: flex;
-  gap: 20px; /* Khoảng cách giữa các biểu đồ */
+    display: flex;
+    gap: 20px; /* Khoảng cách giữa các biểu đồ */
 }
 
 .chart-item {
-  text-align: center;
-  background-color: #fff;
-  padding: 20px;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    text-align: center;
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .small-chart {
-  flex: 4; /* Chiếm 4 phần */
+    flex: 4; /* Chiếm 4 phần */
 }
 
 .large-chart {
-  flex: 8; /* Chiếm 8 phần */
+    flex: 8; /* Chiếm 8 phần */
 }
 
 .chart-item canvas {
-  width: 100%; /* Đảm bảo canvas thu nhỏ theo container */
-  height: auto;
+    width: 100%; /* Đảm bảo canvas thu nhỏ theo container */
+    height: auto;
+}
+
+@media only screen and (max-width: 600px) {
+    .dashboard-stats {
+        display: block;
+    }
+}
+/* Trên màn hình nhỏ (mobile) */
+@media (max-width: 768px) {
+    .chart-item.small-chart {
+        flex: 0 0 100%; /* Mỗi biểu đồ chiếm toàn bộ chiều rộng */
+    }
+    .dashboard-charts {
+        display: block;
+        gap: 20px;
+    }
+    .stat-item {
+        margin-bottom: 20px;
+    }
 }
 </style>

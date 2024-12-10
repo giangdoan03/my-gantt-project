@@ -388,7 +388,7 @@ export default {
             // Khởi tạo Gantt
             gantt.init("gantt_here");
 
-            gantt.attachEvent("onTaskClick", async function (selectedValue) {
+            gantt.attachEvent("onTaskClick", async function () {
 
             });
 

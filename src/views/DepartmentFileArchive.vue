@@ -6,10 +6,12 @@
             back-icon={null}
         >
             <template #extra>
-                <a-button type="primary" icon="upload" @click="handleUpload">
+                <a-button type="primary" @click="handleUpload">
+                    <upload-outlined />
                     Tải lên tài liệu
                 </a-button>
             </template>
+
         </a-page-header>
         <a-tabs default-active-key="all" @change="handleTabChange">
             <a-tab-pane key="all" tab="Tất cả tài liệu">
@@ -28,11 +30,13 @@
 
 <script>
 import FileList from "@/components/FileList.vue";
+import { UploadOutlined } from "@ant-design/icons-vue";
 
 export default {
     name: "DepartmentFileArchive",
     components: {
         FileList,
+        UploadOutlined,
     },
     data() {
         return {

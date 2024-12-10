@@ -94,6 +94,7 @@
             :loading="loading"
             @change="handleTableChange"
             bordered
+            :scroll="{ x: 800 }"
         >
             <template v-slot:bodyCell="{ column, record }">
                 <template v-if="column && column.key === 'actions'">

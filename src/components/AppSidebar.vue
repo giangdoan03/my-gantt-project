@@ -82,7 +82,7 @@ export default {
             this.$router.push({ name: "CustomersList" }); // Điều hướng tới danh sách khách hàng
         },
         navigateToDepartmentFile() {
-            this.$router.push({ name: "DepartmentFile" }); // Điều hướng tới danh sách khách hàng
+            this.$router.push({ name: "ListFileDepartment" }); // Điều hướng tới danh sách khách hàng
         },
     },
 };

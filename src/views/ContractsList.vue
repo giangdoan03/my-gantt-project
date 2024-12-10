@@ -7,6 +7,7 @@
             :loading="loading"
             bordered
             :customRow="customRowHandler"
+            :scroll="{ x: 800 }"
         />
     </div>
 </template>
