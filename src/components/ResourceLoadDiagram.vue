@@ -23,6 +23,7 @@
 <script>
 import gantt from "@/assets/js/dhtmlxgantt.js";
 import {getTasks, getResources, getPriorities, getOwners, getDepartments} from "@/apis/tasks";
+import { fetchFormattedDepartments } from "@/apis/department";
 import {formatDateToVietnameseDateOnly} from "@/utils/customize";
 
 export default {
@@ -37,6 +38,7 @@ export default {
             collaboration: [], // Dữ liệu cho department_data
             loading: false, // Khởi tạo trạng thái loading
             departmentListFilter: '',
+            departments_format: '',
         };
     },
     async mounted() {
@@ -53,6 +55,8 @@ export default {
                 this.resourceData = await getResources();
                 this.prioritie_data = await getPriorities();
                 this.department_data = await getDepartments();
+                this.departments_format = await fetchFormattedDepartments();
+                console.log('departments_format',this.departments_format);
                 const ownersResponse = await getOwners();
                 this.ownersData = ownersResponse;
                 this.collaboration = JSON.parse(JSON.stringify(this.department_data));
@@ -106,8 +110,6 @@ export default {
 
                         // Cập nhật Collection "owner"
                         gantt.updateCollection("owner", ownerCollection);
-
-                        console.log('ownerCollection', ownerCollection)
                     }
                 });
 
@@ -136,9 +138,16 @@ export default {
                 this.loading = false; // Kết thúc trạng thái loading
             }
         },
+        async loadDepartments() {
+            try {
+                const departments = await fetchFormattedDepartments();
+                console.log("Departments:", departments);
+            } catch (error) {
+                console.error(error);
+            }
+        },
         getFormattedDepartmentList(selectedValue) {
-            console.log('selectedValuexxx', selectedValue);
-
+            console.log('this.collaboration',this.collaboration)
             // Lọc và chuyển đổi mảng `collaboration`
             let formattedList = this.collaboration
                 .filter(department => department && department.label) // Lọc các mục không hợp lệ
@@ -181,6 +190,7 @@ export default {
 
             // Sắp xếp kết quả và trả về mảng các đối tượng {key, label}
             result.sort();
+            console.log('result', result)
             return result.map(function (entry) {
                 return {key: entry, label: entry};
             });
@@ -327,7 +337,7 @@ export default {
             gantt.locale.labels.section_assigned = "Người thực hiện";
             gantt.locale.labels.section_priority = "Priority";
 
-
+            console.log('gantt.serverList("priority")', gantt.serverList("priority"))
             gantt.config.lightbox.sections = [
                 {name: "description", height: 38, map_to: "text", type: "textarea", focus: true},
                 {name: "priority", type: "select", map_to: "priority", options: gantt.serverList("priority")},
@@ -359,8 +369,8 @@ export default {
                 {
                     name: "collaboration",  // Phần này bạn có thể thay đổi tên tùy ý
                     type: "checkbox",
-                    map_to: "department_list",   // Ánh xạ trường "collaboration_departments" từ dữ liệu
-                    options: this.getFormattedDepartmentList(''),// Dữ liệu người dùng// Dữ liệu người dùng
+                    map_to: "collaboration_departments",   // Ánh xạ trường "collaboration_departments" từ dữ liệu
+                    options: this.departments_format,// Dữ liệu người dùng// Dữ liệu người dùng
 
                 },
 
