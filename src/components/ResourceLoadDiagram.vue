@@ -22,8 +22,9 @@
 
 <script>
 import gantt from "@/assets/js/dhtmlxgantt.js";
-import {getTasks, getResources, getPriorities, getOwners, getDepartments} from "@/apis/tasks";
-import { fetchFormattedDepartments } from "@/apis/department";
+import {createTask, getTasks, getResources, getPriorities, getOwners, getDepartments} from "@/apis/tasks";
+import {fetchFormattedUsers} from "@/apis/users";
+import {fetchFormattedDepartments} from "@/apis/department";
 import {formatDateToVietnameseDateOnly} from "@/utils/customize";
 
 export default {
@@ -39,6 +40,7 @@ export default {
             loading: false, // Khởi tạo trạng thái loading
             departmentListFilter: '',
             departments_format: '',
+            list_user_format: '',
         };
     },
     async mounted() {
@@ -56,7 +58,9 @@ export default {
                 this.prioritie_data = await getPriorities();
                 this.department_data = await getDepartments();
                 this.departments_format = await fetchFormattedDepartments();
-                console.log('departments_format',this.departments_format);
+                this.list_user_format = await fetchFormattedUsers();
+                console.log('departments_format', this.departments_format);
+                console.log('list_user_format', this.list_user_format);
                 const ownersResponse = await getOwners();
                 this.ownersData = ownersResponse;
                 this.collaboration = JSON.parse(JSON.stringify(this.department_data));
@@ -147,7 +151,7 @@ export default {
             }
         },
         getFormattedDepartmentList(selectedValue) {
-            console.log('this.collaboration',this.collaboration)
+            console.log('this.collaboration', this.collaboration)
             // Lọc và chuyển đổi mảng `collaboration`
             let formattedList = this.collaboration
                 .filter(department => department && department.label) // Lọc các mục không hợp lệ
@@ -162,8 +166,7 @@ export default {
             console.log("Formatted departments after filtering:", formattedList);
 
             return formattedList;
-        }
-        ,
+        },
 
         getUserList(data) {
             var users = [];
@@ -377,8 +380,8 @@ export default {
                 {
                     name: "assigned",  // Phần này bạn có thể thay đổi tên tùy ý
                     type: "checkbox",
-                    map_to: "users",   // Ánh xạ trường "users" từ dữ liệu
-                    options: this.getUserList(this.ganttData.data),// Dữ liệu người dùng// Dữ liệu người dùng
+                    map_to: "owner",   // Ánh xạ trường "users" từ dữ liệu
+                    options: this.list_user_format,// Dữ liệu người dùng// Dữ liệu người dùng
                     onchange: function () {
                         console.log("checkbox switched");
                     }
@@ -412,32 +415,68 @@ export default {
 
             gantt.parse(this.ganttData);
         },
-
         onLightboxSave(id, task, isNew) {
             console.log("Task Saved:", { id, task, isNew });
 
             const task1 = gantt.getTask(id);
             console.log("Lightbox Opened for Task:", task1);
 
-            // Lấy giá trị từ các trường đã chọn
-            const priorityId = task.priority; // Lấy ID của priority
-            const ownerIds = task.users; // Lấy danh sách ID của owner
-
-            console.log("Priority ID:", priorityId);
-            console.log("Owner IDs:", ownerIds);
             console.log("task:", task);
 
             // Gửi dữ liệu task đến API hoặc xử lý tại đây
-            this.saveTaskToServer(task);
+            this.saveTaskToServer(task, isNew);
 
             return true; // Trả về true để đóng lightbox
         },
-        saveTaskToServer(task) {
-            // Giả sử bạn sử dụng Axios để gửi dữ liệu
-            console.log("Saving task to server:", task);
+
+        async saveTaskToServer(task, isNew) {
+            try {
+                console.log("Saving task to server:", task);
+
+                // Lấy `contract_id` từ URL
+                const contractId = this.$route.params.id; // Giả sử bạn đang sử dụng Vue Router
+
+                if (!contractId) {
+                    console.error("Contract ID is missing from the URL.");
+                    gantt.message({
+                        type: "error",
+                        text: "Contract ID is required to save the task.",
+                    });
+                    return;
+                }
+
+                // Thêm `contract_id` vào task
+                task.contract_id = contractId;
+
+                // Xác định `type` dựa trên `duration`
+                task.type = task.duration > 0 ? "task" : "milestone";
+
+                console.log(`Task type set to: ${task.type}`);
+                console.log(`Task with contract_id (${contractId}):`, task);
+
+                if (isNew) {
+                    // Gọi API tạo mới task
+                    const response = await createTask(task);
+
+                    console.log("Task created successfully:", response);
+
+                    // Cập nhật task vào Gantt
+                    gantt.updateTask(response.id, response); // Giả sử API trả về task mới
+                } else {
+                    // Xử lý cập nhật task (nếu cần)
+                    console.log("Updating existing task logic here...");
+                    // Ví dụ: gọi API cập nhật task
+                    // const response = await updateTask(task);
+                    // gantt.updateTask(response.id, response);
+                }
+            } catch (error) {
+                console.error("Failed to save task:", error);
+                gantt.message({
+                    type: "error",
+                    text: "Failed to save task. Please try again.",
+                });
+            }
         },
-
-
         // Hiển thị groups (resources, owners, priorities)
         showGroups(type) {
             gantt.$groupMode = true;
@@ -517,7 +556,6 @@ export default {
             const priority = priorities.find((p) => p.key === Number(task.priority));
             return priority ? priority.label : "Unassigned";
         },
-
 
 
     },

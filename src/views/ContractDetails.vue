@@ -338,7 +338,12 @@ export default {
 
         // Điều hướng sang trang Gantt Chart
         navigateToGanttChart() {
-            this.$router.push({ name: "SalesContract" });
+            const contractId = this.$route.params.id; // Lấy contract ID từ URL hiện tại
+            if (contractId) {
+                this.$router.push({ name: "SalesContract", params: { id: contractId } });
+            } else {
+                console.error("Contract ID not found in the URL.");
+            }
         },
         // Xử lý khi xem trước tệp
         async handlePreview(file) {

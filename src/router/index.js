@@ -39,9 +39,10 @@ const routes = [
 
             // Trang biểu đồ gantt chart
             {
-                path: "chart",
+                path: "/contracts/:id/chart",
                 name: "SalesContract",
                 component: () => import("@/views/SalesContract.vue"),
+                props: true, // Truyền params dưới dạng props vào component
             },
 
             // Trang danh sách vai trò

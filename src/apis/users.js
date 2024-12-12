@@ -11,6 +11,17 @@ export async function fetchUsers() {
 	}
 }
 
+// Lấy danh sách người dùng đã được định dạng
+export async function fetchFormattedUsers() {
+	try {
+		const response = await axiosInstance.get("/users/formatted");
+		return response.data; // Trả về danh sách người dùng đã định dạng
+	} catch (error) {
+		console.error("Failed to fetch formatted users:", error.response?.data || error.message);
+		throw error.response?.data || error.message; // Ném lỗi để xử lý
+	}
+}
+
 // Xóa người dùng
 export const deleteUser = async (userId) => {
 	try {
