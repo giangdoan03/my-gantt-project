@@ -22,7 +22,8 @@
 
 <script>
 import gantt from "@/assets/js/dhtmlxgantt.js";
-import {createTask, getTasks, getResources, getPriorities, getOwners, getDepartments} from "@/apis/tasks";
+import {createTask, updateTask, getResources, getPriorities, getOwners, getDepartments} from "@/apis/tasks";
+import { fetchContractDetails } from "@/apis/contracts";
 import {fetchFormattedUsers} from "@/apis/users";
 import {fetchFormattedDepartments} from "@/apis/department";
 import {formatDateToVietnameseDateOnly} from "@/utils/customize";
@@ -41,6 +42,7 @@ export default {
             departmentListFilter: '',
             departments_format: '',
             list_user_format: '',
+            contract_details: '',
         };
     },
     async mounted() {
@@ -53,12 +55,15 @@ export default {
         async fetchData() {
             try {
                 this.loading = true; // Bắt đầu loading
-                const tasksResponse = await getTasks();
+                // const tasksResponse = await getTasks();
                 this.resourceData = await getResources();
                 this.prioritie_data = await getPriorities();
                 this.department_data = await getDepartments();
                 this.departments_format = await fetchFormattedDepartments();
                 this.list_user_format = await fetchFormattedUsers();
+                const contractId = this.$route.params.id;
+                this.contract_details = await fetchContractDetails(contractId);
+                console.log('contract_details', this.contract_details);
                 console.log('departments_format', this.departments_format);
                 console.log('list_user_format', this.list_user_format);
                 const ownersResponse = await getOwners();
@@ -130,9 +135,10 @@ export default {
                 // gantt.serverList("collaboration", this.collaboration);
 
                 // Cập nhật tasks vào Gantt
-                this.ganttData.data = tasksResponse.map((task) => {
+                this.ganttData.data = this.contract_details.tasks.map((task) => {
                     task.start_date = new Date(task.start_date.replace(" ", "T"));
                     task.end_date = new Date(task.end_date.replace(" ", "T"));
+                    console.log('task', task)
                     return task;
                 });
 
@@ -466,8 +472,9 @@ export default {
                     // Xử lý cập nhật task (nếu cần)
                     console.log("Updating existing task logic here...");
                     // Ví dụ: gọi API cập nhật task
-                    // const response = await updateTask(task);
-                    // gantt.updateTask(response.id, response);
+                    const contractId = this.$route.params.id;
+                    const response = await updateTask(contractId, task);
+                    gantt.updateTask(response.id, response);
                 }
             } catch (error) {
                 console.error("Failed to save task:", error);

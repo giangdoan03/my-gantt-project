@@ -1,11 +1,14 @@
 <template>
     <div>
         <a-card title="Chi tiết hợp đồng" bordered>
-<!--            <template #extra>-->
-<!--                <a-button type="primary" @click="navigateToGanttChart">-->
-<!--                    Xem Biểu Đồ Gantt-->
-<!--                </a-button>-->
-<!--            </template>-->
+            <template #extra>
+                <a-button type="default" @click="goBackToContracts" class="back-button">
+                    Quay lại danh sách hợp đồng
+                </a-button>
+                <a-button type="primary" @click="navigateToGanttChart">
+                    Xem Biểu Đồ Gantt
+                </a-button>
+            </template>
             <div>
                 <template v-if="contract">
                     <a-descriptions bordered :column="1">
@@ -41,12 +44,12 @@
 
         <div style="margin-top: 20px;">
             <div>
-                <a-card title="Công việc triển khai" bordered>
-                    <template #extra>
-                        <a-button type="primary" @click="navigateToGanttChart">
-                            Xem Biểu Đồ Gantt
-                        </a-button>
-                    </template>
+                <a-card title="Kế hoạch triển khai - Tổng hợp file báo cáo" bordered>
+<!--                    <template #extra>-->
+<!--                        <a-button type="primary" @click="navigateToGanttChart">-->
+<!--                            Xem Biểu Đồ Gantt-->
+<!--                        </a-button>-->
+<!--                    </template>-->
                     <a-tree
                         :show-line="showLine"
                         :show-icon="showIcon"
@@ -143,6 +146,7 @@
 <script lang="js">
 import { fetchContractDetails } from "@/apis/contracts";
 import { PlusOutlined } from '@ant-design/icons-vue';
+import gantt from "@/assets/js/dhtmlxgantt.js";
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
 dayjs.extend(relativeTime);
@@ -336,10 +340,16 @@ export default {
             this.isModalVisible = false;
         },
 
+        // Điều hướng quay lại danh sách hợp đồng
+        goBackToContracts() {
+            this.$router.push({ path: "/dashboard/contracts" }); // Điều hướng về danh sách hợp đồng
+        },
+
         // Điều hướng sang trang Gantt Chart
         navigateToGanttChart() {
             const contractId = this.$route.params.id; // Lấy contract ID từ URL hiện tại
             if (contractId) {
+                this.reloadGanttData();
                 this.$router.push({ name: "SalesContract", params: { id: contractId } });
             } else {
                 console.error("Contract ID not found in the URL.");
@@ -382,6 +392,21 @@ export default {
                 this.value = '';
             }, 1000);
         },
+
+        async reloadGanttData() {
+            try {
+                const contractId = this.$route.params.id;
+                this.contract_details = await fetchContractDetails(contractId);
+                // Nạp dữ liệu vào Gantt
+                gantt.clearAll(); // Xóa dữ liệu cũ
+                gantt.parse({ data: this.contract_details.tasks }); // Nạp dữ liệu mới
+            } catch (error) {
+                console.error("Failed to fetch data:", error);
+            } finally {
+                this.loading = false; // Kết thúc trạng thái loading
+            }
+        },
+
     },
     created() {
         this.fetchContractDetailsAndTasks(); // Gọi API khi component được tạo
