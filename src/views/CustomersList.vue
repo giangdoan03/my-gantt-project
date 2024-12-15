@@ -29,9 +29,9 @@
                 <a-row gutter="16">
                     <!-- Cột 1 -->
                     <a-col :span="12">
-                        <a-form-item label="Họ và Tên"
-                                     :rules="[{ required: true, message: 'Vui lòng nhập họ và tên!' }]">
-                            <a-input v-model:value="newCustomer.full_name" placeholder="Nhập họ và tên"/>
+                        <a-form-item label="Tên"
+                                     :rules="[{ required: true, message: 'Vui lòng nhập tên!' }]">
+                            <a-input v-model:value="newCustomer.full_name" placeholder="tên"/>
                         </a-form-item>
                         <a-form-item label="Email"
                                      :rules="[{ required: true, type: 'email', message: 'Vui lòng nhập email hợp lệ!' }]">
@@ -102,7 +102,7 @@
                         <!-- Nút Sửa -->
                         <a-tooltip title="Sửa">
                             <a-button type="link" @click="editCustomer(record.customer_id)">
-                                <edit-outlined/>
+                                <edit-outlined />
                             </a-button>
                         </a-tooltip>
                         <!-- Nút Xóa -->
@@ -111,10 +111,10 @@
                                 title="Bạn có chắc muốn xóa người dùng này không?"
                                 ok-text="Xóa"
                                 cancel-text="Hủy"
-                                @confirm="deleteCustomer(record.customer_id)"
+                                @confirm="handleDeleteCustomer(record.customer_id)"
                             >
                                 <a-button type="link" danger>
-                                    <delete-outlined/>
+                                    <delete-outlined />
                                 </a-button>
                             </a-popconfirm>
                         </a-tooltip>
@@ -122,6 +122,7 @@
                 </template>
             </template>
         </a-table>
+
     </div>
 </template>
 
@@ -129,8 +130,9 @@
 <script>
 import {
     fetchCustomers,
-    deleteCustomer as deleteCustomerApi,
-    createCustomer as createCustomerApi
+    deleteCustomer,
+    updateCustomer,
+    createCustomer,
 } from "@/apis/customers";
 import {DeleteOutlined, EditOutlined, PlusOutlined} from "@ant-design/icons-vue";
 import {h} from "vue";
@@ -166,7 +168,7 @@ export default {
             }, // Dữ liệu khách hàng mới
             columns: [
                 {
-                    title: "Họ Tên",
+                    title: "Tên Công Ty",
                     dataIndex: "full_name",
                     key: "full_name",
                     customRender: ({text, record}) => {
@@ -232,11 +234,9 @@ export default {
         },
         async handleAddCustomer() {
             try {
-                // Gọi API thêm khách hàng
-                await createCustomerApi(this.newCustomer);
+                await createCustomer(this.newCustomer); // Gọi API thêm khách hàng
                 message.success("Khách hàng mới đã được thêm thành công.");
                 this.addCustomerModalVisible = false; // Đóng Modal
-                this.loadCustomers(); // Tải lại danh sách khách hàng
                 // Reset dữ liệu form
                 this.newCustomer = {
                     full_name: "",
@@ -251,8 +251,41 @@ export default {
                     company_type: null,
                     status: "Active",
                 };
+                await this.loadCustomers(); // Tải lại danh sách khách hàng
             } catch (error) {
                 message.error("Không thể thêm khách hàng mới.");
+                console.error(error);
+            }
+        },
+        async handleUpdateCustomer(customerId, updatedData) {
+            try {
+                const response = await updateCustomer(customerId, updatedData); // Gọi API cập nhật khách hàng
+
+                // Kiểm tra phản hồi trả về từ API
+                if (response.status === 'success') {
+                    message.success(response.message || "Khách hàng đã được cập nhật thành công.");
+                    await this.loadCustomers(); // Tải lại danh sách khách hàng
+                } else {
+                    // Nếu API trả về trạng thái khác
+                    message.error(response.message || "Đã xảy ra lỗi khi cập nhật khách hàng.");
+                }
+            } catch (error) {
+                // Nếu lỗi xảy ra, hiển thị lỗi từ `messages` hoặc lỗi mặc định
+                const errorMessage =
+                    (error.response && error.response.data && error.response.data.messages) ||
+                    "Đã xảy ra lỗi khi cập nhật khách hàng.";
+                message.error(errorMessage);
+                console.error(error);
+            }
+        },
+
+        async handleDeleteCustomer(customerId) {
+            try {
+                await deleteCustomer(customerId); // Gọi API xóa khách hàng
+                this.customers = this.customers.filter((customer) => customer.customer_id !== customerId);
+                message.success("Khách hàng đã được xóa thành công.");
+            } catch (error) {
+                message.error("Không thể xóa khách hàng.");
                 console.error(error);
             }
         },
@@ -266,22 +299,13 @@ export default {
             this.showAddCustomerModal(); // Hiển thị Modal
         },
         editCustomer(id) {
-            this.$router.push({name: "EditCustomer", params: {id}});
-        },
-        async deleteCustomer(id) {
-            try {
-                await deleteCustomerApi(id); // Gọi API xóa khách hàng
-                this.customers = this.customers.filter((customer) => customer.customer_id !== id);
-                this.$message.success("Đã xóa khách hàng thành công.");
-            } catch (error) {
-                this.$message.error("Không thể xóa khách hàng.");
-                console.error(error);
-            }
+            this.$router.push({ name: "EditCustomer", params: { id } });
         },
         viewCustomerDetails(id) {
-            this.$router.push({name: "CustomerDetails", params: {id}});
+            this.$router.push({ name: "CustomerDetails", params: { id } });
         },
     },
+
 };
 </script>
 

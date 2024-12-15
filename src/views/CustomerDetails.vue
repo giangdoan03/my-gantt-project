@@ -64,11 +64,9 @@
         </a-card>
     </div>
 </template>
-
-
 <script>
-import axios from "axios";
 import { message } from "ant-design-vue";
+import { fetchCustomerById } from "@/apis/customers";
 
 export default {
     name: "CustomerDetails",
@@ -88,8 +86,9 @@ export default {
         async loadCustomerDetails(id) {
             this.loading = true;
             try {
-                const response = await axios.get(`http://localhost/codeigniter-app/api/customers/${id}`);
-                this.customer = response.data; // Lưu chi tiết khách hàng
+                const response = await fetchCustomerById(id);
+                console.log(response);
+                this.customer = response; // Lưu chi tiết khách hàng
                 this.comments = [
                     // Dữ liệu mẫu nhận xét
                     { id: 1, content: "Nhận xét mẫu 1.", date: "2024-12-01" },

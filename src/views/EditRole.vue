@@ -21,7 +21,7 @@
 </template>
 
 <script>
-import axios from "axios";
+import { createRole, updateRole, fetchRoles } from "@/apis/roles";
 
 export default {
     data() {
@@ -41,30 +41,30 @@ export default {
         async fetchRole() {
             const { id } = this.$route.params;
             if (this.isEdit) {
-                const response = await axios.get(
-                    `http://localhost/codeigniter-app/api/roles/${id}`
-                );
-                this.role = response.data;
+                try {
+                    const role = await fetchRoles(id); // Sử dụng fetchRoles API
+                    this.role = role;
+                } catch (error) {
+                    this.$message.error("Không thể tải vai trò. Vui lòng thử lại.");
+                }
             }
         },
         async handleSubmit() {
             try {
                 if (this.isEdit) {
-                    await axios.put(
-                        `http://localhost/codeigniter-app/api/roles/${this.$route.params.id}`,
-                        this.role
-                    );
+                    // Gọi API updateRole
+                    await updateRole(this.$route.params.id, this.role);
                     this.$message.success("Vai trò đã được cập nhật!");
                 } else {
-                    await axios.post(
-                        "http://localhost/codeigniter-app/api/roles",
-                        this.role
-                    );
+                    // Gọi API createRole
+                    await createRole(this.role);
                     this.$message.success("Vai trò đã được thêm mới!");
                 }
                 this.$router.push("/roles");
             } catch (error) {
-                this.$message.error("Có lỗi xảy ra. Vui lòng thử lại.");
+                const errorMessage =
+                    error.response?.data?.message || "Có lỗi xảy ra. Vui lòng thử lại.";
+                this.$message.error(errorMessage);
             }
         },
     },

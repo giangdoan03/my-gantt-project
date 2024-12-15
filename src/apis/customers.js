@@ -36,7 +36,7 @@ export async function createCustomer(customerData) {
 // Cập nhật khách hàng
 export async function updateCustomer(customerId, customerData) {
     try {
-        const response = await axiosInstance.put(`/customers/${customerId}`, customerData);
+        const response = await axiosInstance.post(`/customers/${customerId}`, customerData);
         return response.data; // Trả về kết quả sau khi cập nhật khách hàng
     } catch (error) {
         console.error(`Failed to update customer with ID ${customerId}:`, error.response?.data || error.message);

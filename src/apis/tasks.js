@@ -5,7 +5,6 @@ export async function createTask(taskData) {
     try {
         const response = await axiosInstance.post("/tasks/add", taskData);
 
-        console.log("taskData", taskData); // Log dữ liệu task gửi lên
         return response.data; // Trả về phản hồi từ API
     } catch (error) {
         console.error(
@@ -19,9 +18,7 @@ export async function createTask(taskData) {
 // Cập nhật task
 export async function updateTask(taskId, taskData) {
     try {
-        const response = await axiosInstance.put(`/tasks/update/${taskId}`, taskData);
-
-        console.log("Updated task data", taskData); // Log dữ liệu task gửi lên
+        const response = await axiosInstance.post(`/tasks/update/${taskId}`, taskData);
         return response.data; // Trả về phản hồi từ API
     } catch (error) {
         console.error(

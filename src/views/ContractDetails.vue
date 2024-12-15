@@ -448,4 +448,8 @@ export default {
 .status-closed {
     background-color: #f5222d; /* Màu đỏ */
 }
+
+.back-button {
+    margin-right: 10px;
+}
 </style>
