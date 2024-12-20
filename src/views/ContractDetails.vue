@@ -297,8 +297,10 @@ export default {
                 const contract = await fetchContractDetails(this.id); // Gọi API
                 this.contract = contract; // Lưu thông tin hợp đồng
                 if (contract && contract.tasks) {
+                    console.log(contract.tasks);
                     // Xây dựng dữ liệu cây từ danh sách task
                     this.treeData = this.buildTree(contract.tasks);
+                    console.log('this.treeData', this.treeData)
                     // Lấy tất cả key để mở rộng node
                     this.expandedKeys = this.getAllKeys(contract.tasks);
                 }
