@@ -70,6 +70,7 @@ export default {
                 }
             });
         },
+
         initializeGantt() {
             gantt.setSkin("material");
             gantt.plugins({
@@ -193,6 +194,7 @@ export default {
     mounted() {
         this.initializeGantt();
         this.addClickListener(); // Thêm sự kiện click
+        console.log("Nút có tồn tại:", document.querySelector(".details-button"));
     },
 };
 </script>
