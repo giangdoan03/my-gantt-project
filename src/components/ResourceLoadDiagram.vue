@@ -54,6 +54,22 @@ export default {
                 console.error("Error fetching data:", error);
             }
         },
+        addClickListener() {
+            // Lắng nghe sự kiện click trên nút "Xem chi tiết"
+            document.addEventListener("click", (e) => {
+                if (e.target.classList.contains("details-button")) {
+                    const taskId = e.target.getAttribute("data-task-id");
+                    const contractId = e.target.getAttribute("data-contract-id");
+
+                    // Chuyển hướng bằng Vue Router
+                    this.$router.push({
+                        name: "ContractDetails", // Tên route trong Vue Router
+                        params: { id: contractId }, // Truyền contractId
+                        query: { task: taskId }, // Truyền taskId qua query string
+                    });
+                }
+            });
+        },
         initializeGantt() {
             gantt.setSkin("material");
             gantt.plugins({
@@ -155,15 +171,15 @@ export default {
 
 // Cấu hình popup của Gantt Chart
             gantt.templates.quick_info_content = function (start, end, task) {
-                const contractId = 1; // Lấy ID hợp đồng từ logic của bạn (có thể trích xuất từ URL hiện tại)
-                const detailUrl = `http://localhost:8080/contracts/${contractId}/?task=${task.id}`; // Thêm tham số task vào URL
-
+                const contractId = 1;
                 return `
-        <p>Ngày bắt đầu: ${gantt.templates.date_grid(start)}</p>
-        <p>Ngày kết thúc: ${gantt.templates.date_grid(end)}</p>
-        <p>Trạng thái: <b>${task.status || "Chưa xác định"}</b></p>
-        <a href="${detailUrl}" rel="noopener noreferrer">Xem chi tiết</a>
-    `;
+                <p>Ngày bắt đầu: ${gantt.templates.date_grid(start)}</p>
+                <p>Ngày kết thúc: ${gantt.templates.date_grid(end)}</p>
+                <p>Trạng thái: <b>${task.status || "Chưa xác định"}</b></p>
+                <button class="details-button" data-task-id="${task.id}" data-contract-id="${contractId}">
+                    Xem chi tiết
+                </button>
+            `;
             };
 
 
@@ -176,6 +192,7 @@ export default {
     },
     mounted() {
         this.initializeGantt();
+        this.addClickListener(); // Thêm sự kiện click
     },
 };
 </script>

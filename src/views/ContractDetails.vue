@@ -149,6 +149,7 @@ import { PlusOutlined } from '@ant-design/icons-vue';
 import gantt from "@/assets/js/dhtmlxgantt.js";
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
+// import {getTaskDetails} from "@/apis/tasks";
 dayjs.extend(relativeTime);
 
 export default {
@@ -299,21 +300,19 @@ export default {
         // Lấy tham số task từ URL
         getTaskFromUrl() {
             const params = new URLSearchParams(window.location.search);
+            console.log('params', params)
             return params.get("task"); // Lấy giá trị của task
         },
         // Kiểm tra task có tồn tại không và hiển thị modal
         async checkTaskInUrl() {
 
             const taskId = this.getTaskFromUrl(); // Lấy ID task từ URL
-            const contract = await fetchContractDetails(taskId); // Gọi API
-            console.log('contract', contract);
+            // const contract = await getTaskDetails(taskId); // Gọi API
+            // console.log('contract', contract);
             if (taskId) {
+                this.isModalVisible = true; // Hiển thị modal
                 // Tìm task trong danh sách
-                const task = contract.tasks.find((t) => t.id === parseInt(taskId));
-                if (task) {
-                    this.selectedTask = task; // Lưu thông tin task
-                    this.isModalVisible = true; // Hiển thị modal
-                }
+                // const task = contract.tasks.find((t) => t.id === parseInt(taskId));
             }
         },
 
