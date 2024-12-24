@@ -223,6 +223,10 @@ export default {
         };
     },
 
+    mounted() {
+        this.checkTaskInUrl(); // Kiểm tra khi trang được tải
+    },
+
     computed: {
         // Dữ liệu hợp đồng chuyển thành data source cho bảng
         contractData() {
@@ -291,6 +295,29 @@ export default {
             ];
             return colors[Math.floor(Math.random() * colors.length)];
         },
+
+        // Lấy tham số task từ URL
+        getTaskFromUrl() {
+            const params = new URLSearchParams(window.location.search);
+            return params.get("task"); // Lấy giá trị của task
+        },
+        // Kiểm tra task có tồn tại không và hiển thị modal
+        async checkTaskInUrl() {
+
+            const taskId = this.getTaskFromUrl(); // Lấy ID task từ URL
+            const contract = await fetchContractDetails(taskId); // Gọi API
+            console.log('contract', contract);
+            if (taskId) {
+                // Tìm task trong danh sách
+                const task = contract.tasks.find((t) => t.id === parseInt(taskId));
+                if (task) {
+                    this.selectedTask = task; // Lưu thông tin task
+                    this.isModalVisible = true; // Hiển thị modal
+                }
+            }
+        },
+
+
         // Gọi API để lấy thông tin hợp đồng và xây dựng dữ liệu cây
         async fetchContractDetailsAndTasks() {
             try {

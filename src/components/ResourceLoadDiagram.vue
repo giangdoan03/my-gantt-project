@@ -1,9 +1,9 @@
 <template>
     <div>
         <a-spin :spinning="loading" tip="Loading...">
-        <div class="main-content">
-            <div id="gantt_here" style="width: 100%; height: 100%; padding: 0"></div>
-        </div>
+            <div class="main-content">
+                <div id="gantt_here" style="width: 100%; height: 100%; padding: 0"></div>
+            </div>
         </a-spin>
     </div>
 </template>
@@ -11,7 +11,7 @@
 <script>
 import "dhtmlx-gantt/codebase/dhtmlxgantt.css";
 import gantt from "@/assets/js/dhtmlxgantt.js";
-import { fetchContractDetails } from "@/apis/contracts";
+import {fetchContractDetails} from "@/apis/contracts";
 
 export default {
     name: "GanttChart",
@@ -31,22 +31,6 @@ export default {
                 gantt.showQuickInfo(tasks[0].id);
             }
         },
-        showMessage() {
-            gantt.message({ text: "Some text", expire: 5000 });
-        },
-        showError() {
-            gantt.message({ text: "Some text", type: "error" });
-        },
-        showAlert() {
-            gantt.alert({ text: "Some text" });
-        },
-        showAlertWithHeader() {
-            gantt.alert({ text: "Some text", title: "Title" });
-        },
-        toggleCritical() {
-            gantt.config.highlight_critical_path = !gantt.config.highlight_critical_path;
-            gantt.render();
-        },
         async fetchData() {
             try {
                 // Gọi API để lấy dữ liệu
@@ -65,7 +49,7 @@ export default {
                 }));
 
                 // Render dữ liệu vào Gantt chart
-                gantt.parse({ data: tasks });
+                gantt.parse({data: tasks});
             } catch (error) {
                 console.error("Error fetching data:", error);
             }
@@ -84,19 +68,19 @@ export default {
             ];
 
             gantt.config.columns = [
-                { name: "wbs", label: "WBS", width: 50, template: gantt.getWBSCode, resize: true },
-                { name: "text", label: "Task name", tree: true, width: 170, resize: true, min_width: 10 },
+                {name: "wbs", label: "WBS", width: 50, template: gantt.getWBSCode, resize: true},
+                {name: "text", label: "Task name", tree: true, width: 170, resize: true, min_width: 10},
                 {
                     name: "start_date",
                     align: "center",
                     width: 90,
                     resize: true,
                     template: function (task) {
-                        return gantt.date.date_to_str("%m-%d-%Y")(task.start_date); // Định dạng ngày thành MM-DD-YYYY
+                        return gantt.date.date_to_str("%d-%m-%Y")(task.start_date); // Định dạng ngày thành MM-DD-YYYY
                     }
                 },
-                { name: "duration", align: "center", width: 80, resize: true },
-                { name: "add", width: 40 },
+                {name: "duration", align: "center", width: 80, resize: true},
+                {name: "add", width: 40},
             ];
 
             gantt.templates.rightside_text = function (start, end, task) {
@@ -158,6 +142,32 @@ export default {
                 },
             ];
 
+
+            gantt.templates.quick_info_title = function (start, end, task) {
+                return `<b>${task.text}</b>`;
+            };
+// Hàm lấy ID hợp đồng từ URL
+//             function getContractIdFromUrl() {
+//                 const url = window.location.href; // Lấy URL hiện tại
+//                 const matches = url.match(/\/contracts\/(\d+)/); // Tìm đoạn /contracts/{id}
+//                 return matches ? matches[1] : null; // Trả về ID nếu tìm thấy
+//             }
+
+// Cấu hình popup của Gantt Chart
+            gantt.templates.quick_info_content = function (start, end, task) {
+                const contractId = 1; // Lấy ID hợp đồng từ logic của bạn (có thể trích xuất từ URL hiện tại)
+                const detailUrl = `http://localhost:8080/contracts/${contractId}/?task=${task.id}`; // Thêm tham số task vào URL
+
+                return `
+        <p>Ngày bắt đầu: ${gantt.templates.date_grid(start)}</p>
+        <p>Ngày kết thúc: ${gantt.templates.date_grid(end)}</p>
+        <p>Trạng thái: <b>${task.status || "Chưa xác định"}</b></p>
+        <a href="${detailUrl}" rel="noopener noreferrer">Xem chi tiết</a>
+    `;
+            };
+
+
+
             gantt.config.order_branch = true;
 
             gantt.init("gantt_here");
@@ -172,7 +182,6 @@ export default {
 <style scoped>
 
 .main-content {
-    height: 600px;
     height: calc(100vh - 50px);
 }
 </style>
