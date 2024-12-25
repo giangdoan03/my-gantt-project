@@ -71,12 +71,40 @@ export default {
             });
         },
 
+        // Hàm xử lý sự kiện click nút trên grid
+        clickGridButton(id, action) {
+            switch (action) {
+                case "edit":
+                    gantt.showLightbox(id); // Mở lightbox
+                    break;
+                case "add":
+                    gantt.createTask(null, id); // Thêm task
+                    break;
+                case "delete":
+                    gantt.confirm({
+                        title: gantt.locale.labels.confirm_deleting_title,
+                        text: gantt.locale.labels.confirm_deleting,
+                        callback: (res) => {
+                            if (res) gantt.deleteTask(id);
+                        },
+                    });
+                    break;
+                case "redirect":
+                    // Chuyển hướng bằng Vue Router
+                    this.$router.push({
+                        name: "ContractDetails", // Tên route trong Vue Router
+                        params: { id }, // Truyền ID của task
+                    });
+                    break;
+            }
+        },
+
         initializeGantt() {
             gantt.setSkin("material");
             gantt.plugins({
-                quick_info: true,
+                // quick_info: true,
                 tooltip: true,
-                critical_path: true,
+                // critical_path: true,
             });
             gantt.config.xml_date = "%Y-%m-%d %H:%i:%s";
 
@@ -84,6 +112,18 @@ export default {
                 "01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12"
             ];
 
+
+            // Cột trong grid
+            // const colHeader =
+            //     '<div class="gantt_grid_head_cell gantt_grid_head_add" onclick="gantt.createTask()">CH</div>';
+            const colContent = (task) => {
+                return `
+          <i class="fa gantt_button_grid gantt_grid_edit fa-pencil" onclick="clickGridButton(${task.id}, 'edit')"></i>
+          <i class="fa gantt_button_grid gantt_grid_add fa-plus" onclick="clickGridButton(${task.id}, 'add')"></i>
+          <i class="fa gantt_button_grid gantt_grid_delete fa-times" onclick="clickGridButton(${task.id}, 'delete')"></i>
+          <i class="fa gantt_button_grid gantt_grid_redirect fa-arrow-right" onclick="clickGridButton(${task.id}, 'redirect')"></i>
+        `;
+            };
             gantt.config.columns = [
                 {name: "wbs", label: "WBS", width: 50, template: gantt.getWBSCode, resize: true},
                 {name: "text", label: "Task name", tree: true, width: 170, resize: true, min_width: 10},
@@ -97,6 +137,12 @@ export default {
                     }
                 },
                 {name: "duration", align: "center", width: 80, resize: true},
+                {
+                    name: "buttons",
+                    label: "CH",
+                    width: 85,
+                    template: colContent
+                },
                 {name: "add", width: 40},
             ];
 
@@ -160,9 +206,9 @@ export default {
             ];
 
 
-            gantt.templates.quick_info_title = function (start, end, task) {
-                return `<b>${task.text}</b>`;
-            };
+            // gantt.templates.quick_info_title = function (start, end, task) {
+            //     return `<b>${task.text}</b>`;
+            // };
 // Hàm lấy ID hợp đồng từ URL
 //             function getContractIdFromUrl() {
 //                 const url = window.location.href; // Lấy URL hiện tại
@@ -171,17 +217,19 @@ export default {
 //             }
 
 // Cấu hình popup của Gantt Chart
-            gantt.templates.quick_info_content = function (start, end, task) {
-                const contractId = 1;
-                return `
-                <p>Ngày bắt đầu: ${gantt.templates.date_grid(start)}</p>
-                <p>Ngày kết thúc: ${gantt.templates.date_grid(end)}</p>
-                <p>Trạng thái: <b>${task.status || "Chưa xác định"}</b></p>
-                <button class="details-button" data-task-id="${task.id}" data-contract-id="${contractId}">
-                    Xem chi tiết
-                </button>
-            `;
-            };
+//             gantt.templates.quick_info_content = function (start, end, task) {
+//                 const contractId = 1;
+//                 return `
+//         <div>
+//             <p>Ngày bắt đầu: ${gantt.templates.date_grid(start)}</p>
+//             <p>Ngày kết thúc: ${gantt.templates.date_grid(end)}</p>
+//             <p>Trạng thái: <b>${task.status || "Chưa xác định"}</b></p>
+//             <button class="details-button" data-task-id="${task.id}" data-contract-id="${contractId}">
+//                 Xem chi tiết
+//             </button>
+//         </div>
+//     `;
+//             };
 
 
 
@@ -189,12 +237,16 @@ export default {
 
             gantt.init("gantt_here");
             this.fetchData(); // Lấy dữ liệu từ API
+
         },
     },
     mounted() {
         this.initializeGantt();
-        this.addClickListener(); // Thêm sự kiện click
-        console.log("Nút có tồn tại:", document.querySelector(".details-button"));
+        // this.addClickListener(); // Thêm sự kiện click
+        // console.log("Nút có tồn tại:", document.querySelector(".details-button"));
+        // Gắn sự kiện click để xử lý các nút
+        // Gắn sự kiện click để xử lý các nút
+        window.clickGridButton = this.clickGridButton.bind(this); // Bind this vào phương thức
     },
 };
 </script>
@@ -202,5 +254,34 @@ export default {
 
 .main-content {
     height: calc(100vh - 50px);
+}
+
+.complete_button {
+    margin-top: 1px;
+    background-repeat: no-repeat;
+    width: 20px;
+    height: 20px;
+}
+
+.dhx_btn_set.complete_button_set {
+    background: #ACCAAC;
+    color: #454545;
+    border: 1px solid #94AD94;
+}
+
+.completed_task {
+    border: 1px solid #94AD94;
+}
+
+.completed_task .gantt_task_progress {
+    --dhx-gantt-task-progress-color: #ACCAAC;
+}
+
+.dhtmlx-completed {
+    border-color: #669e60;
+}
+
+.dhtmlx-completed div {
+    background: #81c97a;
 }
 </style>
