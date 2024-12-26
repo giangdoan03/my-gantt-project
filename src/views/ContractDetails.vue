@@ -224,8 +224,14 @@ export default {
         };
     },
 
+    created() {
+        this.fetchContractDetailsAndTasks(); // Gọi API khi component được tạo
+    },
+
     mounted() {
-        this.checkTaskInUrl(); // Kiểm tra khi trang được tải
+        // this.checkTaskInUrl(); // Kiểm tra khi trang được tải
+        // Tự động gọi khi component được mount
+        this.autoSelectTaskFromUrl();
     },
 
     computed: {
@@ -329,6 +335,9 @@ export default {
                     console.log('this.treeData', this.treeData)
                     // Lấy tất cả key để mở rộng node
                     this.expandedKeys = this.getAllKeys(contract.tasks);
+
+                    // Gọi autoSelectTaskFromUrl sau khi treeData đã được thiết lập
+                    this.autoSelectTaskFromUrl();
                 }
             } catch (error) {
                 console.error("Failed to fetch contract details:", error);
@@ -361,6 +370,34 @@ export default {
                 key: selectedNode.key,
             }; // Lưu thông tin node được chọn
             this.isModalVisible = true; // Hiển thị modal
+        },
+
+        // Hàm tự động select node dựa vào query string
+        autoSelectTaskFromUrl() {
+            const task = this.$route.query.task; // Lấy giá trị task từ query string
+            if (task) {
+                this.isModalVisible = true; // Hiển thị modal
+
+                // Kiểm tra nếu task tồn tại trong treeData
+                const taskNode = this.treeData.find((node) => node.key === task);
+
+                console.log('treeData', this.treeData)
+                if (taskNode) {
+                    // Mở rộng key và gọi sự kiện onSelect
+                    this.expandedKeys = [task]; // Mở rộng node
+
+                    // Mô phỏng thông tin giống `info.node` từ onSelect
+                    this.selectedTask = {
+                        title: taskNode.title,
+                        key: taskNode.key,
+                    }; // Lưu thông tin node được chọn
+
+                    console.log("Thông tin task được chọn:", this.selectedTask);
+
+                } else {
+                    console.warn("Task không tồn tại trong treeData:", task);
+                }
+            }
         },
 
         // Đóng modal
@@ -435,9 +472,6 @@ export default {
             }
         },
 
-    },
-    created() {
-        this.fetchContractDetailsAndTasks(); // Gọi API khi component được tạo
     },
 };
 </script>

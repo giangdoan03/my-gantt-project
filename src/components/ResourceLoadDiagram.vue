@@ -72,31 +72,13 @@ export default {
         },
 
         // Hàm xử lý sự kiện click nút trên grid
-        clickGridButton(id, action) {
-            switch (action) {
-                case "edit":
-                    gantt.showLightbox(id); // Mở lightbox
-                    break;
-                case "add":
-                    gantt.createTask(null, id); // Thêm task
-                    break;
-                case "delete":
-                    gantt.confirm({
-                        title: gantt.locale.labels.confirm_deleting_title,
-                        text: gantt.locale.labels.confirm_deleting,
-                        callback: (res) => {
-                            if (res) gantt.deleteTask(id);
-                        },
-                    });
-                    break;
-                case "redirect":
-                    // Chuyển hướng bằng Vue Router
-                    this.$router.push({
-                        name: "ContractDetails", // Tên route trong Vue Router
-                        params: { id }, // Truyền ID của task
-                    });
-                    break;
-            }
+        clickGridButton(taskId, contractId) {
+            // Chuyển hướng bằng Vue Router
+            this.$router.push({
+                name: "ContractDetails",
+                params: { id: contractId }, // Truyền ID hợp đồng
+                query: { task: taskId }, // Truyền ID task vào query string
+            });
         },
 
         initializeGantt() {
@@ -118,11 +100,8 @@ export default {
             //     '<div class="gantt_grid_head_cell gantt_grid_head_add" onclick="gantt.createTask()">CH</div>';
             const colContent = (task) => {
                 return `
-          <i class="fa gantt_button_grid gantt_grid_edit fa-pencil" onclick="clickGridButton(${task.id}, 'edit')"></i>
-          <i class="fa gantt_button_grid gantt_grid_add fa-plus" onclick="clickGridButton(${task.id}, 'add')"></i>
-          <i class="fa gantt_button_grid gantt_grid_delete fa-times" onclick="clickGridButton(${task.id}, 'delete')"></i>
-          <i class="fa gantt_button_grid gantt_grid_redirect fa-arrow-right" onclick="clickGridButton(${task.id}, 'redirect')"></i>
-        `;
+      <i class="fa gantt_button_grid gantt_grid_redirect fa-arrow-right" onclick="clickGridButton(${task.id}, ${task.contract_id}, 'redirect')"></i>
+    `;
             };
             gantt.config.columns = [
                 {name: "wbs", label: "WBS", width: 50, template: gantt.getWBSCode, resize: true},
@@ -139,8 +118,9 @@ export default {
                 {name: "duration", align: "center", width: 80, resize: true},
                 {
                     name: "buttons",
-                    label: "CH",
-                    width: 85,
+                    label: "View",
+                    width: 50,
+                    align: "center",
                     template: colContent
                 },
                 {name: "add", width: 40},
