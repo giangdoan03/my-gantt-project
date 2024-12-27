@@ -329,10 +329,8 @@ export default {
                 const contract = await fetchContractDetails(this.id); // Gọi API
                 this.contract = contract; // Lưu thông tin hợp đồng
                 if (contract && contract.tasks) {
-                    console.log(contract.tasks);
                     // Xây dựng dữ liệu cây từ danh sách task
                     this.treeData = this.buildTree(contract.tasks);
-                    console.log('this.treeData', this.treeData)
                     // Lấy tất cả key để mở rộng node
                     this.expandedKeys = this.getAllKeys(contract.tasks);
 
@@ -361,6 +359,20 @@ export default {
             return tasks.map(task => task.id); // Trả về danh sách tất cả các ID
         },
 
+        getAllKeysAuto(tasks) {
+            const keys = [];
+            const traverse = (nodes) => {
+                nodes.forEach((node) => {
+                    keys.push(node.key); // Thêm key của node hiện tại
+                    if (node.children && node.children.length > 0) {
+                        traverse(node.children); // Duyệt các node con
+                    }
+                });
+            };
+            traverse(tasks); // Bắt đầu duyệt từ gốc
+            return keys;
+        },
+
         // Sự kiện khi chọn node trong cây
         onSelect(selectedKeys, info) {
             // const selectedKey = selectedKeys[0]; // Lấy key của node được chọn
@@ -372,33 +384,48 @@ export default {
             this.isModalVisible = true; // Hiển thị modal
         },
 
+        findNodeByKey(tree, key) {
+            for (const node of tree) {
+                if (node.key === key) {
+                    return node; // Tìm thấy node
+                }
+                if (node.children && node.children.length > 0) {
+                    const childNode = this.findNodeByKey(node.children, key);
+                    if (childNode) {
+                        return childNode; // Tìm thấy node trong cấp con
+                    }
+                }
+            }
+            return null; // Không tìm thấy
+        },
+
+
         // Hàm tự động select node dựa vào query string
         autoSelectTaskFromUrl() {
             const task = this.$route.query.task; // Lấy giá trị task từ query string
             if (task) {
                 this.isModalVisible = true; // Hiển thị modal
 
-                // Kiểm tra nếu task tồn tại trong treeData
-                const taskNode = this.treeData.find((node) => node.key === task);
+                // Dùng hàm đệ quy để tìm node
+                const taskNode = this.findNodeByKey(this.treeData, task);
+                console.log("taskNode", taskNode);
 
-                console.log('treeData', this.treeData)
                 if (taskNode) {
                     // Mở rộng key và gọi sự kiện onSelect
-                    this.expandedKeys = [task]; // Mở rộng node
+                    this.expandedKeys = this.getAllKeysAuto(this.treeData); // Mở rộng toàn bộ cây
 
                     // Mô phỏng thông tin giống `info.node` từ onSelect
                     this.selectedTask = {
                         title: taskNode.title,
                         key: taskNode.key,
                     }; // Lưu thông tin node được chọn
-
                     console.log("Thông tin task được chọn:", this.selectedTask);
-
                 } else {
                     console.warn("Task không tồn tại trong treeData:", task);
                 }
             }
-        },
+        }
+        ,
 
         // Đóng modal
         closeModal() {

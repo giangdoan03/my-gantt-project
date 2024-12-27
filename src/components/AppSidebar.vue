@@ -9,6 +9,15 @@
                 <user-outlined />
                 <span>Dashboard</span>
             </a-menu-item>
+            <a-menu-item key="8" @click="navigateToPendingTasks">
+                <clock-circle-outlined />
+                <span>Đầu việc chờ</span>
+            </a-menu-item>
+            <!-- Menu Đấu thầu -->
+            <a-menu-item key="9" @click="navigateToBidding">
+                <solution-outlined />
+                <span>Đấu thầu</span>
+            </a-menu-item>
             <a-menu-item key="6" @click="navigateToContracts">
                 <file-done-outlined />
                 <span>Hợp đồng</span>
@@ -40,7 +49,7 @@
 
 
 <script>
-import { UserOutlined, VideoCameraOutlined, FolderOutlined, TeamOutlined, UsergroupAddOutlined, FileDoneOutlined, DashboardOutlined } from '@ant-design/icons-vue';
+import { UserOutlined, VideoCameraOutlined, FolderOutlined, TeamOutlined, UsergroupAddOutlined, FileDoneOutlined, DashboardOutlined, ClockCircleOutlined, SolutionOutlined  } from '@ant-design/icons-vue';
 
 
 export default {
@@ -52,7 +61,9 @@ export default {
         TeamOutlined,
         UsergroupAddOutlined,
         FileDoneOutlined,
-        DashboardOutlined
+        DashboardOutlined,
+        ClockCircleOutlined,
+        SolutionOutlined
     },
     props: {
         collapsed: {
@@ -84,6 +95,13 @@ export default {
         navigateToDepartmentFile() {
             this.$router.push({ name: "ListFileDepartment" }); // Điều hướng tới danh sách khách hàng
         },
+        navigateToPendingTasks() {
+            this.$router.push({ name: 'PendingTasks' }); // Điều hướng đến route "PendingTasks"
+        },
+        // Thêm phương thức cho Đấu thầu
+        navigateToBidding() {
+            this.$router.push({ name: "Bidding" }); // Điều hướng đến route "Bidding"
+        }
     },
 };
 </script>

@@ -12,25 +12,103 @@
 import "dhtmlx-gantt/codebase/dhtmlxgantt.css";
 import gantt from "@/assets/js/dhtmlxgantt.js";
 import {fetchContractDetails} from "@/apis/contracts";
+import { createTask } from "@/apis/tasks";
 
 export default {
     name: "GanttChart",
     data() {
         return {
             loading: false, // Khởi tạo trạng thái loading
+            contractId: null, // Lưu contract_id từ URL
 
         };
     },
+    mounted() {
+        this.initializeGantt();
+        // Lấy contract_id từ URL
+        const path = window.location.pathname; // "/contracts/1/chart"
+        const segments = path.split('/'); // ["", "contracts", "1", "chart"]
+        this.contractId = segments[2]; // Lấy contract_id từ URL
+        // Gắn sự kiện click để xử lý các nút
+        window.clickGridButton = this.clickGridButton.bind(this); // Bind this vào phương thức
+    },
     methods: {
-        createTask() {
-            gantt.createTask();
+        async handleLightboxSave(id, task, is_new) {
+            console.log("Save button clicked in Lightbox", { id, task, is_new });
+
+            // Nếu parent là 0, thay bằng root_id hoặc null
+            // Xử lý nếu parent là 0
+            if (!task.parent || task.parent === 0 || task.parent === "0") {
+                task.parent = gantt.config.root_id || null; // Gán parent là root nếu không có cha
+            }
+
+            // Tính toán sort_order và wbs
+            task.sort_order = this.calculateSortOrder(id); // Tính sort_order
+            task.wbs = this.calculateWBS(id); // Tính wbs
+
+            // Thêm contract_id từ URL vào task
+            task.contract_id = this.contractId;
+            task.type = 'task';
+
+            try {
+                // Gửi dữ liệu task lên server
+                const response = await createTask(task);
+
+                console.log('response', response)
+
+                if (response.data.id) {
+                    gantt.changeTaskId(id, response.data.id); // Đồng bộ ID thực từ backend
+                }
+
+                // Kiểm tra và xóa task tạm nếu tồn tại
+                if (gantt.isTaskExists(task.id)) {
+                    gantt.deleteTask(task.id);
+                }
+
+                this.fetchData(); // Lấy dữ liệu từ API
+
+                gantt.message({ type: "success", text: "Task saved successfully" });
+            } catch (error) {
+                console.error("Failed to save task:", error);
+                gantt.message({ type: "error", text: "Failed to save task" });
+            }
+
+            return true; // Cho phép xử lý mặc định
         },
-        showQuickInfo() {
-            const tasks = gantt.getTaskByTime();
-            if (tasks.length > 0) {
-                gantt.showQuickInfo(tasks[0].id);
+
+        calculateSortOrder(taskId) {
+            const parent = gantt.getParent(taskId);
+            const children = gantt.getChildren(parent);
+            return children.indexOf(taskId) + 1;
+        },
+
+        calculateWBS(taskId) {
+            const parent = gantt.getParent(taskId); // Lấy task cha
+            console.log('parent', parent);
+            const sortOrder = this.calculateSortOrder(taskId); // Tính sortOrder của task hiện tại
+
+            // Xử lý nếu parent là 0 hoặc root
+            if (!parent || parent === gantt.config.root_id || parent === "0" || parent === 0) {
+                return `${sortOrder}`;
+            }
+
+            try {
+                const parentTask = gantt.getTask(parent);
+                console.log('parentTask', parentTask);
+
+                if (!parentTask) {
+                    console.error(`Parent task with ID ${parent} not found.`);
+                    return `${sortOrder}`;
+                }
+
+                const parentWBS = parentTask.wbs || this.calculateWBS(parent); // Đệ quy tính toán WBS nếu cần
+                return `${parentWBS}.${sortOrder}`;
+            } catch (error) {
+                console.error(`Error fetching parent task with ID ${parent}:`, error);
+                return `${sortOrder}`; // Nếu có lỗi, trả về sortOrder
             }
         },
+
         async fetchData() {
             try {
                 // Gọi API để lấy dữ liệu
@@ -54,22 +132,6 @@ export default {
                 console.error("Error fetching data:", error);
             }
         },
-        addClickListener() {
-            // Lắng nghe sự kiện click trên nút "Xem chi tiết"
-            document.addEventListener("click", (e) => {
-                if (e.target.classList.contains("details-button")) {
-                    const taskId = e.target.getAttribute("data-task-id");
-                    const contractId = e.target.getAttribute("data-contract-id");
-
-                    // Chuyển hướng bằng Vue Router
-                    this.$router.push({
-                        name: "ContractDetails", // Tên route trong Vue Router
-                        params: { id: contractId }, // Truyền contractId
-                        query: { task: taskId }, // Truyền taskId qua query string
-                    });
-                }
-            });
-        },
 
         // Hàm xử lý sự kiện click nút trên grid
         clickGridButton(taskId, contractId) {
@@ -84,20 +146,16 @@ export default {
         initializeGantt() {
             gantt.setSkin("material");
             gantt.plugins({
-                // quick_info: true,
                 tooltip: true,
-                // critical_path: true,
             });
             gantt.config.xml_date = "%Y-%m-%d %H:%i:%s";
+            gantt.config.use_utc = true; // Sử dụng UTC để tránh lỗi múi giờ
 
             gantt.locale.date.month_full = [
                 "01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12"
             ];
 
-
             // Cột trong grid
-            // const colHeader =
-            //     '<div class="gantt_grid_head_cell gantt_grid_head_add" onclick="gantt.createTask()">CH</div>';
             const colContent = (task) => {
                 return `
       <i class="fa gantt_button_grid gantt_grid_redirect fa-arrow-right" onclick="clickGridButton(${task.id}, ${task.contract_id}, 'redirect')"></i>
@@ -144,9 +202,7 @@ export default {
                   `;
             };
 
-
             gantt.config.start_on_monday = false;
-
             gantt.config.scale_height = 36 * 3;
             gantt.config.scales = [
                 {
@@ -185,48 +241,13 @@ export default {
                 },
             ];
 
-
-            // gantt.templates.quick_info_title = function (start, end, task) {
-            //     return `<b>${task.text}</b>`;
-            // };
-// Hàm lấy ID hợp đồng từ URL
-//             function getContractIdFromUrl() {
-//                 const url = window.location.href; // Lấy URL hiện tại
-//                 const matches = url.match(/\/contracts\/(\d+)/); // Tìm đoạn /contracts/{id}
-//                 return matches ? matches[1] : null; // Trả về ID nếu tìm thấy
-//             }
-
-// Cấu hình popup của Gantt Chart
-//             gantt.templates.quick_info_content = function (start, end, task) {
-//                 const contractId = 1;
-//                 return `
-//         <div>
-//             <p>Ngày bắt đầu: ${gantt.templates.date_grid(start)}</p>
-//             <p>Ngày kết thúc: ${gantt.templates.date_grid(end)}</p>
-//             <p>Trạng thái: <b>${task.status || "Chưa xác định"}</b></p>
-//             <button class="details-button" data-task-id="${task.id}" data-contract-id="${contractId}">
-//                 Xem chi tiết
-//             </button>
-//         </div>
-//     `;
-//             };
-
-
+            // Bắt sự kiện lưu trong Lightbox
+            gantt.attachEvent("onLightboxSave", this.handleLightboxSave);
 
             gantt.config.order_branch = true;
-
             gantt.init("gantt_here");
             this.fetchData(); // Lấy dữ liệu từ API
-
         },
-    },
-    mounted() {
-        this.initializeGantt();
-        // this.addClickListener(); // Thêm sự kiện click
-        // console.log("Nút có tồn tại:", document.querySelector(".details-button"));
-        // Gắn sự kiện click để xử lý các nút
-        // Gắn sự kiện click để xử lý các nút
-        window.clickGridButton = this.clickGridButton.bind(this); // Bind this vào phương thức
     },
 };
 </script>
@@ -236,29 +257,8 @@ export default {
     height: calc(100vh - 50px);
 }
 
-.complete_button {
-    margin-top: 1px;
-    background-repeat: no-repeat;
-    width: 20px;
-    height: 20px;
-}
-
-.dhx_btn_set.complete_button_set {
-    background: #ACCAAC;
-    color: #454545;
-    border: 1px solid #94AD94;
-}
-
-.completed_task {
-    border: 1px solid #94AD94;
-}
-
 .completed_task .gantt_task_progress {
     --dhx-gantt-task-progress-color: #ACCAAC;
-}
-
-.dhtmlx-completed {
-    border-color: #669e60;
 }
 
 .dhtmlx-completed div {
