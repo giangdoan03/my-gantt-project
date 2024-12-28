@@ -26,9 +26,14 @@
                 <team-outlined />
                 <span>Khách hàng</span>
             </a-menu-item>
-            <a-menu-item key="2">
-                <video-camera-outlined />
-                <span>Videos</span>
+            <!-- Menu Phòng Ban -->
+            <a-menu-item key="10" @click="navigateToDepartments">
+                <apartment-outlined />
+                <span>Phòng Ban</span>
+            </a-menu-item>
+            <a-menu-item key="2" @click="navigateToChatRoom">
+                <message-outlined />
+                <span>Chat Room</span>
             </a-menu-item>
             <a-menu-item key="3" @click="navigateToDepartmentFile">
                 <folder-outlined />
@@ -49,21 +54,22 @@
 
 
 <script>
-import { UserOutlined, VideoCameraOutlined, FolderOutlined, TeamOutlined, UsergroupAddOutlined, FileDoneOutlined, DashboardOutlined, ClockCircleOutlined, SolutionOutlined  } from '@ant-design/icons-vue';
+import { UserOutlined, MessageOutlined, FolderOutlined, TeamOutlined, UsergroupAddOutlined, FileDoneOutlined, DashboardOutlined, ClockCircleOutlined, SolutionOutlined, ApartmentOutlined  } from '@ant-design/icons-vue';
 
 
 export default {
     name: 'AppSidebar',
     components: {
         UserOutlined,
-        VideoCameraOutlined,
+        MessageOutlined,
         FolderOutlined,
         TeamOutlined,
         UsergroupAddOutlined,
         FileDoneOutlined,
         DashboardOutlined,
         ClockCircleOutlined,
-        SolutionOutlined
+        SolutionOutlined,
+        ApartmentOutlined
     },
     props: {
         collapsed: {
@@ -100,8 +106,11 @@ export default {
         },
         // Thêm phương thức cho Đấu thầu
         navigateToBidding() {
-            this.$router.push({ name: "Bidding" }); // Điều hướng đến route "Bidding"
-        }
+            this.$router.push({ name: "BidsList" }); // Điều hướng đến route "Bidding"
+        },
+        navigateToChatRoom() {
+            this.$router.push({ name: "ListFileDepartment" }); // Điều hướng tới danh sách khách hàng
+        },
     },
 };
 </script>

@@ -45,6 +45,27 @@ const routes = [
                 props: true, // Truyền params dưới dạng props vào component
             },
 
+            {
+                path: "bids",
+                name: "BidsList",
+                component: () => import("@/views/BidsList.vue"), // Hiển thị danh sách gói thầu
+            },
+            {
+                path: "/bids/:id",
+                name: "BidDetail",
+                component: () => import("@/views/BidDetail.vue"), // Chi tiết gói thầu
+            },
+            {
+                path: "bids/add",
+                name: "BidAdd",
+                component: () => import("@/views/BidAdd.vue"), // Thêm gói thầu mới
+            },
+            {
+                path: "/bids/edit/:id",
+                name: "BidEdit",
+                component: () => import("@/views/BidEdit.vue"), // Sửa gói thầu
+            },
+
             // Trang danh sách vai trò
             {
                 path: "roles",

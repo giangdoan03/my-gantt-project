@@ -12,7 +12,7 @@
 import "dhtmlx-gantt/codebase/dhtmlxgantt.css";
 import gantt from "@/assets/js/dhtmlxgantt.js";
 import {fetchContractDetails} from "@/apis/contracts";
-import { createTask } from "@/apis/tasks";
+import {createTask, updateTask} from "@/apis/tasks";
 
 export default {
     name: "GanttChart",
@@ -51,13 +51,20 @@ export default {
             task.type = 'task';
 
             try {
-                // Gửi dữ liệu task lên server
-                const response = await createTask(task);
+                let response;
 
-                console.log('response', response)
+                if (is_new) {
+                    // Gửi yêu cầu tạo mới task
+                    response = await createTask(task);
+                    console.log("Task created successfully:", response);
 
-                if (response.data.id) {
-                    gantt.changeTaskId(id, response.data.id); // Đồng bộ ID thực từ backend
+                    if (response.data.id) {
+                        gantt.changeTaskId(id, response.data.id); // Đồng bộ ID thực từ backend
+                    }
+                } else {
+                    // Gửi yêu cầu cập nhật task
+                    response = await updateTask(id, task); // Hàm cập nhật task (sẽ tạo bên dưới)
+                    console.log("Task updated successfully:", response);
                 }
 
                 // Kiểm tra và xóa task tạm nếu tồn tại
@@ -65,12 +72,12 @@ export default {
                     gantt.deleteTask(task.id);
                 }
 
-                this.fetchData(); // Lấy dữ liệu từ API
+                this.fetchData(); // Lấy dữ liệu từ API để đồng bộ
 
-                gantt.message({ type: "success", text: "Task saved successfully" });
+                gantt.message({ type: "success", text: is_new ? "Task created successfully" : "Task updated successfully" });
             } catch (error) {
-                console.error("Failed to save task:", error);
-                gantt.message({ type: "error", text: "Failed to save task" });
+                console.error(is_new ? "Failed to create task:" : "Failed to update task:", error);
+                gantt.message({ type: "error", text: is_new ? "Failed to create task" : "Failed to update task" });
             }
 
             return true; // Cho phép xử lý mặc định
@@ -109,6 +116,66 @@ export default {
             }
         },
 
+
+        async handleRowDragEnd(id, targetId, parentId, index) {
+            console.log("Row Drag Ended", { id, targetId, parentId, index });
+
+            // Lấy thông tin parentId nếu chưa có
+            if (!parentId) {
+                parentId = gantt.getParent(id); // Lấy giá trị parentId từ task
+            }
+
+            console.log("Determined parentId:", parentId);
+
+            try {
+                // Cập nhật parent và sort_order
+                await this.updateParentAndSortOrder(id, parentId);
+
+                // Gửi dữ liệu cập nhật lên server
+                await this.saveTaskToServer(id);
+
+                // Sắp xếp lại Gantt theo sort_order
+                gantt.sort("sort_order", false); // Sắp xếp theo sort_order tăng dần
+
+                gantt.message({ type: "success", text: "Task updated successfully" });
+            } catch (error) {
+                console.error("Failed to update task:", error);
+                gantt.message({ type: "error", text: "Failed to update task" });
+            }
+        },
+
+        async updateParentAndSortOrder(taskId, parentId) {
+            const task = gantt.getTask(taskId);
+            task.parent = parentId; // Cập nhật parent
+
+            // Lấy danh sách các task con cùng parent
+            const siblings = gantt.getChildren(parentId);
+
+            // Cập nhật sort_order theo thứ tự
+            siblings.forEach((siblingId, idx) => {
+                const siblingTask = gantt.getTask(siblingId);
+                siblingTask.sort_order = idx + 1; // Gán sort_order theo thứ tự mới
+                gantt.updateTask(siblingId); // Cập nhật lại task trong Gantt
+            });
+        },
+
+        async saveTaskToServer(taskId) {
+            const task = gantt.getTask(taskId);
+
+            // Gửi dữ liệu cập nhật lên server
+            let resulet = await updateTask(taskId, {
+                parent: task.parent,
+                sort_order: task.sort_order,
+            });
+
+            console.log('resulet', resulet)
+        },
+
+        handleAfterTaskUpdate(id, task) {
+            console.log("Task updated:", { id, task });
+            gantt.sort("sort_order", false); // Sắp xếp lại Gantt theo sort_order
+        },
+
         async fetchData() {
             try {
                 // Gọi API để lấy dữ liệu
@@ -117,15 +184,20 @@ export default {
                 const data = this.contract_details;
 
                 // Chuyển đổi dữ liệu API về cấu trúc phù hợp cho Gantt
-                const tasks = data.tasks.map((task) => ({
+                let tasks = data.tasks.map((task) => ({
                     id: task.id,
                     text: task.text,
                     start_date: task.start_date,
                     duration: task.duration,
                     progress: task.progress,
-                    parent: task.parent || 0, // Đặt `0` nếu không có parent
+                    parent: task.parent || null, // Đặt `0` nếu không có parent
+                    sort_order: task.sort_order,
                 }));
+                // Sắp xếp dữ liệu theo `sort_order`
+                tasks = tasks.sort((a, b) => a.sort_order - b.sort_order);
 
+                // Render dữ liệu vào Gantt chart
+                gantt.clearAll(); // Xóa các task cũ nếu có
                 // Render dữ liệu vào Gantt chart
                 gantt.parse({data: tasks});
             } catch (error) {
@@ -157,9 +229,7 @@ export default {
 
             // Cột trong grid
             const colContent = (task) => {
-                return `
-      <i class="fa gantt_button_grid gantt_grid_redirect fa-arrow-right" onclick="clickGridButton(${task.id}, ${task.contract_id}, 'redirect')"></i>
-    `;
+                return `<i class="fa gantt_button_grid gantt_grid_redirect fa-arrow-right" onclick="clickGridButton(${task.id}, ${task.contract_id}, 'redirect')"></i>`;
             };
             gantt.config.columns = [
                 {name: "wbs", label: "WBS", width: 50, template: gantt.getWBSCode, resize: true},
@@ -241,10 +311,24 @@ export default {
                 },
             ];
 
+            gantt.config.drag_mode = {
+                move: true,     // Cho phép di chuyển task
+                resize: true,   // Cho phép thay đổi kích thước task
+                progress: true, // Cho phép thay đổi tiến độ task
+            };
+            gantt.config.order_branch = true;  // Kéo thả trong cùng cấp
+            gantt.config.order_branch_free = true; // Kéo thả tự do giữa các cấp
+
+
             // Bắt sự kiện lưu trong Lightbox
             gantt.attachEvent("onLightboxSave", this.handleLightboxSave);
+            // Đăng ký sự kiện kéo thả hàng (Row Drag End)
+            gantt.attachEvent("onRowDragEnd", this.handleRowDragEnd);
 
-            gantt.config.order_branch = true;
+            // Tự động sắp xếp lại Gantt khi task được cập nhật
+            gantt.attachEvent("onAfterTaskUpdate", this.handleAfterTaskUpdate);
+
+
             gantt.init("gantt_here");
             this.fetchData(); // Lấy dữ liệu từ API
         },
