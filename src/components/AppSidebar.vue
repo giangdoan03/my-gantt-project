@@ -102,7 +102,7 @@ export default {
             this.$router.push({ name: "ListFileDepartment" }); // Điều hướng tới danh sách khách hàng
         },
         navigateToPendingTasks() {
-            this.$router.push({ name: 'PendingTasks' }); // Điều hướng đến route "PendingTasks"
+            this.$router.push({ name: 'PendingTasksList' }); // Điều hướng đến route "PendingTasks"
         },
         // Thêm phương thức cho Đấu thầu
         navigateToBidding() {
@@ -111,6 +111,9 @@ export default {
         navigateToChatRoom() {
             this.$router.push({ name: "ListFileDepartment" }); // Điều hướng tới danh sách khách hàng
         },
+        navigateToDepartments() {
+            this.$router.push({ name: "ListFileDepartment" }); // Điều hướng tới danh sách khách hàng
+        }
     },
 };
 </script>

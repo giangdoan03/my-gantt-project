@@ -232,6 +232,10 @@ export default {
         viewBidDetails(id) {
             this.$router.push({name: "BidDetail", params: {id}});
         },
+
+        handleTableChange() {
+            console.log('123')
+        }
     },
 };
 </script>

@@ -59,3 +59,17 @@ export async function updateRole(roleId, roleData) {
         throw error.response?.data || error.message;
     }
 }
+
+// Lấy chi tiết vai trò
+export async function getRoleDetail(roleId) {
+    try {
+        const response = await axiosInstance.get(`/roles/${roleId}`);
+        return response.data; // Trả về dữ liệu từ API
+    } catch (error) {
+        console.error(
+            "Failed to fetch role detail:",
+            error.response?.data || error.message
+        );
+        throw error.response?.data || error.message; // Ném lỗi để xử lý
+    }
+}

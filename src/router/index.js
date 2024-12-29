@@ -66,13 +66,38 @@ const routes = [
                 component: () => import("@/views/BidEdit.vue"), // Sửa gói thầu
             },
 
+            {
+                path: "pending-tasks",
+                name: "PendingTasksList",
+                component: () => import("@/views/PendingTasks/PendingTasksList.vue"), // Hiển thị danh sách đầu việc
+            },
+            {
+                path: "/pending-tasks/:id",
+                name: "PendingTaskDetail",
+                component: () => import("@/views/PendingTasks/PendingTaskDetail.vue"), // Chi tiết đầu việc
+            },
+            {
+                path: "pending-tasks/add",
+                name: "PendingTaskAdd",
+                component: () => import("@/views/PendingTasks/PendingTaskAdd.vue"), // Thêm đầu việc mới
+            },
+            {
+                path: "/pending-tasks/edit/:id",
+                name: "PendingTasksEdit",
+                component: () => import("@/views/PendingTasks/PendingTasksEdit.vue"), // Sửa đầu việc
+            },
             // Trang danh sách vai trò
             {
                 path: "roles",
                 name: "RolesList",
                 component: () => import("@/views/RolesList.vue"),
             },
-
+            // Chi tiết vai trò
+            {
+                path: "roles/:id",
+                name: "RoleDetail",
+                component: () => import("@/views/RoleDetail.vue"),
+            },
             // Trang thêm mới hoặc chỉnh sửa vai trò
             {
                 path: "roles/add",
