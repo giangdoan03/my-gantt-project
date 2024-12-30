@@ -57,27 +57,39 @@
                     <!--                        :expanded-keys="expandedKeys"-->
                     <!--                        @select="onSelect"-->
                     <!--                    />-->
-                    <div>
-                        <Draggable class="mtl-tree" v-model="treeData2" treeLine>
-                            <template #default="{ node, stat }">
-                                <OpenIcon
-                                    v-if="stat.children.length"
-                                    :open="stat.open"
-                                    class="mtl-mr"
-                                    @click="stat.open = !stat.open"
-                                />
-                                <input
-                                    class="mtl-checkbox mtl-mr"
-                                    type="checkbox"
-                                    v-model="stat.checked"
-                                />
-                                <div class="info-right" @click="showPopup(node)">
-                                    <folder-outlined/>
-                                    <span class="mtl-ml w-100">{{ node.text }}</span>
-                                </div>
-                            </template>
-                        </Draggable>
-                    </div>
+                    <a-row gutter={16}>
+                        <a-col :span="12">
+                            <a-table :row-selection="rowSelection" :columns="columns2" :data-source="tasks">
+                                <template #bodyCell="{ column, text }">
+                                    <template v-if="column.dataIndex === 'text'">
+                                        <a>{{ text }}</a>
+                                    </template>
+                                </template>
+                            </a-table>
+                        </a-col>
+
+                        <a-col :span="12">
+                            <Draggable class="mtl-tree" v-model="treeData2" treeLine>
+                                <template #default="{ node, stat }">
+                                    <OpenIcon
+                                        v-if="stat.children.length"
+                                        :open="stat.open"
+                                        class="mtl-mr"
+                                        @click="stat.open = !stat.open"
+                                    />
+                                    <input
+                                        class="mtl-checkbox mtl-mr"
+                                        type="checkbox"
+                                        v-model="stat.checked"
+                                    />
+                                    <div class="info-right" @click="showPopup(node)">
+                                        <folder-outlined />
+                                        <span class="mtl-ml w-100">{{ node.text }}</span>
+                                    </div>
+                                </template>
+                            </Draggable>
+                        </a-col>
+                    </a-row>
                 </a-card>
             </div>
         </div>
@@ -162,36 +174,6 @@
                 </template>
             </a-comment>
         </a-modal>
-        <div>
-            <template>
-                <div>
-                    <a-transfer
-                        v-model:target-keys="targetKeys"
-                        :data-source="task1"
-                        :disabled="disabled"
-                        :show-search="showSearch"
-                        :filter-option="(inputValue, item) => item.title.indexOf(inputValue) !== -1"
-                        :show-select-all="false"
-                        @change="onChange"
-                    >
-                        <template #children="{ direction, filteredItems, selectedKeys, disabled: listDisabled, onItemSelectAll, onItemSelect }">
-                            <a-table
-                                :row-selection="getRowSelection({ disabled: listDisabled, selectedKeys, onItemSelectAll, onItemSelect })"
-                                :columns="direction === 'left' ? leftColumns : rightColumns"
-                                :data-source="filteredItems"
-                                size="small"
-                                :style="{ pointerEvents: listDisabled ? 'none' : null }"
-                                :custom-row="({ key, disabled: itemDisabled }) => ({
-            onClick: () => { if (itemDisabled || listDisabled) return; onItemSelect(key, !selectedKeys.includes(key)); } })"
-                            />
-                        </template>
-                    </a-transfer>
-
-                    <a-switch v-model:checked="disabled" un-checked-children="disabled" checked-children="disabled" style="margin-top: 16px" />
-                    <a-switch v-model:checked="showSearch" un-checked-children="showSearch" checked-children="showSearch" style="margin-top: 16px" />
-                </div>
-            </template>
-        </div>
 
     </div>
 </template>
@@ -204,6 +186,7 @@ import relativeTime from 'dayjs/plugin/relativeTime';
 import {Draggable, OpenIcon} from '@he-tree/vue'
 import '@he-tree/vue/style/default.css'
 import '@he-tree/vue/style/material-design.css'
+import {getTemporaryTasks} from "@/apis/tasks";
 
 dayjs.extend(relativeTime);
 
@@ -228,6 +211,8 @@ export default {
             isModalVisible: false, // Trạng thái hiển thị modal
             selectedTask: null, // Dữ liệu công việc được chọn
             selectedKey: null, // Hoặc _selectedKey nếu muốn bỏ qua ESLint
+
+            tasks: '',
 
             isPreviewVisible: false, // Hiển thị modal xem trước
             fileList: [
@@ -284,37 +269,31 @@ export default {
                 },
             ],
 
-            task1: [
-                { key: "1", title: "Task 1", is_temporary: 1 },
-                { key: "2", title: "Task 2", is_temporary: 1 },
-                { key: "3", title: "Task 3", is_temporary: 1 },
-                { key: "4", title: "Task 4", is_temporary: 1 },
-            ],
-            task2: [],
-            targetKeys: [], // Danh sách chứa task đã chuyển sang bên phải
-            disabled: false,
-            showSearch: false,
-            leftColumns: [
+            rowSelection: {
+                onChange: (selectedRowKeys, selectedRows) => {
+                    console.log(`selectedRowKeys: ${selectedRowKeys}`, 'selectedRows: ', selectedRows);
+                },
+                getCheckboxProps: (record) => ({
+                    disabled: record.name === 'Disabled User',
+                    name: record.name,
+                }),
+            },
+            columns2: [
                 {
-                    dataIndex: "title",
-                    title: "Task Name",
+                    title: 'Tên đầu việc',
+                    dataIndex: 'text', // This refers to the task name
+                    key: 'text',
                 },
                 {
-                    dataIndex: "is_temporary",
-                    title: "temporary",
-                },
-            ],
-            // Cột bên phải sử dụng template slot
-            rightColumns: [
-                {
-                    title: "Task Name",
-                    key: "title",
-                    customRender: () => {
-                        return `<span>{{ record.title }} - (Temporary: {{ record.is_temporary === 0 ? 'No' : 'Yes' }})</span>`
+                    title: 'Nội dung',
+                    dataIndex: 'description', // This will be custom content you can add
+                    key: 'description',
+                    render: (text, record) => {
+                        // You can return a custom description based on your task data
+                        return `Priority: ${record.priority.label}, Status: ${record.status}`;
                     }
-                },
+                }
             ],
-
         };
     },
 
@@ -325,6 +304,7 @@ export default {
     mounted() {
         // Tự động gọi khi component được mount
         this.autoSelectTaskFromUrl();
+        this.loadTasks(); // Tải dữ liệu đầu việc khi component được mount
     },
 
     computed: {
@@ -332,6 +312,19 @@ export default {
     },
 
     methods: {
+        async loadTasks() {
+            try {
+                this.loading = true;
+                const tasks = await getTemporaryTasks(); // Gọi API lấy danh sách đầu việc
+                console.log('tasks', tasks)
+                this.tasks = tasks;
+            } catch (error) {
+                this.$message.error("Không thể tải danh sách đầu việc.");
+                console.error(error);
+            } finally {
+                this.loading = false;
+            }
+        },
         // Hàm lấy một chữ cái in hoa ngẫu nhiên
         getRandomLetter() {
             const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
@@ -546,40 +539,6 @@ export default {
                 this.loading = false; // Kết thúc trạng thái loading
             }
         },
-        // Hàm gọi khi có sự thay đổi trong targetKeys (danh sách các task đã được chuyển)
-        // Hàm gọi khi có sự thay đổi trong targetKeys (danh sách các task đã được chuyển)
-        onChange(nextTargetKeys) {
-            this.targetKeys = nextTargetKeys;
-
-            // Cập nhật trạng thái is_temporary khi chuyển task sang phải
-            this.task1.forEach((task) => {
-                if (nextTargetKeys.includes(task.key)) {
-                    // Nếu task đã được chuyển sang task2, set is_temporary = 0
-                    task.is_temporary = 0;
-                }
-            });
-
-            // Cập nhật lại danh sách task2 với các task đã được chuyển
-            this.task2 = this.task1.filter((task) => nextTargetKeys.includes(task.key));
-        },
-        // Hàm lấy dữ liệu row selection cho cả 2 bảng (trái và phải)
-        getRowSelection({ disabled, selectedKeys, onItemSelectAll, onItemSelect }) {
-            return {
-                getCheckboxProps: (item) => ({
-                    disabled: disabled || item.disabled,
-                }),
-                onSelectAll(selected, selectedRows) {
-                    const treeSelectedKeys = selectedRows
-                        .filter((item) => !item.disabled)
-                        .map(({ key }) => key);
-                    onItemSelectAll(treeSelectedKeys, selected);
-                },
-                onSelect({ key }, selected) {
-                    onItemSelect(key, selected);
-                },
-                selectedRowKeys: selectedKeys,
-            };
-        },
     },
 };
 </script>
@@ -633,7 +592,6 @@ export default {
     padding: 10px;
     border: 1px solid #ddd;
     overflow: auto;
-    max-width: 400px;
 }
 
 /* Node cơ bản */
@@ -721,6 +679,25 @@ export default {
 
 .vtlist::-webkit-scrollbar-track {
     background-color: #f1f1f1;
+}
+
+.custom-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.custom-list-item {
+    display: flex;
+    align-items: center;
+    padding: 8px 16px;
+    border-bottom: 1px solid #ddd;
+    cursor: pointer;
+}
+
+.custom-list-item.disabled {
+    color: #ccc;
+    cursor: not-allowed;
 }
 
 
