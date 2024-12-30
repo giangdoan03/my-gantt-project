@@ -10,6 +10,7 @@
   "dependencies": {
     "@ant-design/icons-vue": "^7.0.1",
     "@coreui/icons": "^3.0.1",
+    "@he-tree/vue": "^2.9.4",
     "ant-design-vue": "^4.2.6",
     "axios": "^1.7.8",
     "chart.js": "^4.4.6",

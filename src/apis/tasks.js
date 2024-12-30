@@ -51,6 +51,11 @@ export async function getTasks() {
     return response.data.data;
 }
 
+export async function getTemporaryTasks() {
+    const response = await axiosInstance.get("/tasks/temporary");
+    return response.data.data;
+}
+
 // Lấy chi tiết task
 export async function getTaskDetails(taskId) {
     try {

@@ -31,7 +31,7 @@ const routes = [
                 component: () => import("@/views/ContractsList.vue"), // Component hiển thị danh sách hợp đồng
             },
             {
-                path: "/contracts/:id",
+                path: "contracts/:id",
                 name: "ContractDetails", // Tên route
                 component: () => import("@/views/ContractDetails.vue"), // Component chi tiết hợp đồng
                 props: true, // Cho phép truyền tham số id dưới dạng props
@@ -39,7 +39,7 @@ const routes = [
 
             // Trang biểu đồ gantt chart
             {
-                path: "/contracts/:id/chart",
+                path: "contracts/:id/chart",
                 name: "SalesContract",
                 component: () => import("@/views/SalesContract.vue"),
                 props: true, // Truyền params dưới dạng props vào component
@@ -51,7 +51,7 @@ const routes = [
                 component: () => import("@/views/BidsList.vue"), // Hiển thị danh sách gói thầu
             },
             {
-                path: "/bids/:id",
+                path: "bids/:id",
                 name: "BidDetail",
                 component: () => import("@/views/BidDetail.vue"), // Chi tiết gói thầu
             },
@@ -61,7 +61,7 @@ const routes = [
                 component: () => import("@/views/BidAdd.vue"), // Thêm gói thầu mới
             },
             {
-                path: "/bids/edit/:id",
+                path: "bids/edit/:id",
                 name: "BidEdit",
                 component: () => import("@/views/BidEdit.vue"), // Sửa gói thầu
             },
@@ -72,7 +72,7 @@ const routes = [
                 component: () => import("@/views/PendingTasks/PendingTasksList.vue"), // Hiển thị danh sách đầu việc
             },
             {
-                path: "/pending-tasks/:id",
+                path: "pending-tasks/:id",
                 name: "PendingTaskDetail",
                 component: () => import("@/views/PendingTasks/PendingTaskDetail.vue"), // Chi tiết đầu việc
             },
@@ -82,7 +82,7 @@ const routes = [
                 component: () => import("@/views/PendingTasks/PendingTaskAdd.vue"), // Thêm đầu việc mới
             },
             {
-                path: "/pending-tasks/edit/:id",
+                path: "pending-tasks/edit/:id",
                 name: "PendingTasksEdit",
                 component: () => import("@/views/PendingTasks/PendingTasksEdit.vue"), // Sửa đầu việc
             },
@@ -121,7 +121,7 @@ const routes = [
                 component: () => import("@/views/UserForm.vue"),
             },
             {
-                path: "/users/edit/:id",
+                path: "users/edit/:id",
                 name: "EditUser",
                 component: () => import("@/views/UserForm.vue"), // Form chỉnh sửa người dùng
                 props: true, // Cho phép nhận tham số "id"
@@ -133,18 +133,18 @@ const routes = [
                 component: () => import("@/views/CustomersList.vue"), // Component hiển thị danh sách khách hàng
             },
             {
-                path: "/customers/:id",
+                path: "customers/:id",
                 name: "CustomerDetails",
                 component: () => import("@/views/CustomerDetails.vue"), // Component chi tiết khách hàng
                 props: true, // Cho phép truyền tham số id dưới dạng props
             },
             {
-                path: "/customers/edit/:id",
+                path: "customers/edit/:id",
                 name: "EditCustomer",
                 component: () => import("@/views/EditCustomer.vue"), // Component sửa khách hàng
             },
             {
-                path: "/file/",
+                path: "file/",
                 name: "ListFileDepartment",
                 component: () => import("@/views/DepartmentFileArchive.vue"),
             },

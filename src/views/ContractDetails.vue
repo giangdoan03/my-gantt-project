@@ -35,7 +35,7 @@
                 </template>
                 <template v-else>
                     <div class="loading-center">
-                        <a-spin tip="Đang tải dữ liệu..." />
+                        <a-spin tip="Đang tải dữ liệu..."/>
                     </div>
                 </template>
             </div>
@@ -45,24 +45,45 @@
         <div style="margin-top: 20px;">
             <div>
                 <a-card title="Kế hoạch triển khai - Tổng hợp file báo cáo" bordered>
-<!--                    <template #extra>-->
-<!--                        <a-button type="primary" @click="navigateToGanttChart">-->
-<!--                            Xem Biểu Đồ Gantt-->
-<!--                        </a-button>-->
-<!--                    </template>-->
-                    <a-tree
-                        :show-line="showLine"
-                        :show-icon="showIcon"
-                        :tree-data="treeData"
-                        :expanded-keys="expandedKeys"
-                        @select="onSelect"
-                    />
+                    <!--                    <template #extra>-->
+                    <!--                        <a-button type="primary" @click="navigateToGanttChart">-->
+                    <!--                            Xem Biểu Đồ Gantt-->
+                    <!--                        </a-button>-->
+                    <!--                    </template>-->
+                    <!--                    <a-tree-->
+                    <!--                        :show-line="showLine"-->
+                    <!--                        :show-icon="showIcon"-->
+                    <!--                        :tree-data="treeData"-->
+                    <!--                        :expanded-keys="expandedKeys"-->
+                    <!--                        @select="onSelect"-->
+                    <!--                    />-->
+                    <div>
+                        <Draggable class="mtl-tree" v-model="treeData2" treeLine>
+                            <template #default="{ node, stat }">
+                                <OpenIcon
+                                    v-if="stat.children.length"
+                                    :open="stat.open"
+                                    class="mtl-mr"
+                                    @click="stat.open = !stat.open"
+                                />
+                                <input
+                                    class="mtl-checkbox mtl-mr"
+                                    type="checkbox"
+                                    v-model="stat.checked"
+                                />
+                                <div class="info-right" @click="showPopup(node)">
+                                    <folder-outlined/>
+                                    <span class="mtl-ml w-100">{{ node.text }}</span>
+                                </div>
+                            </template>
+                        </Draggable>
+                    </div>
                 </a-card>
             </div>
         </div>
 
         <!-- Popup hiển thị thông tin -->
-<!--  tắt đóng mở modal      :maskClosable="false"-->
+        <!--  tắt đóng mở modal      :maskClosable="false"-->
         <a-modal
             v-model:open="isModalVisible"
             title="Chi tiết Công Việc"
@@ -84,7 +105,7 @@
                 @preview="handlePreview"
             >
                 <div v-if="fileList.length < 8">
-                    <plus-outlined />
+                    <plus-outlined/>
                     <div style="margin-top: 8px">Upload</div>
                 </div>
             </a-upload>
@@ -96,7 +117,7 @@
                 :footer="null"
                 @cancel="handlePreviewCancel"
             >
-                <img alt="example" style="width: 100%" :src="previewImage" />
+                <img alt="example" style="width: 100%" :src="previewImage"/>
             </a-modal>
 
             <!-- Bình luận -->
@@ -131,7 +152,7 @@
                 </template>
                 <template #content>
                     <a-form-item>
-                        <a-textarea v-model:value="value" :rows="4" />
+                        <a-textarea v-model:value="value" :rows="4"/>
                     </a-form-item>
                     <a-form-item>
                         <a-button html-type="submit" :loading="submitting" type="primary" @click="handleSubmit">
@@ -141,24 +162,66 @@
                 </template>
             </a-comment>
         </a-modal>
+        <div>
+            <template>
+                <div>
+                    <a-transfer
+                        v-model:target-keys="targetKeys"
+                        :data-source="task1"
+                        :disabled="disabled"
+                        :show-search="showSearch"
+                        :filter-option="(inputValue, item) => item.title.indexOf(inputValue) !== -1"
+                        :show-select-all="false"
+                        @change="onChange"
+                    >
+                        <template #children="{ direction, filteredItems, selectedKeys, disabled: listDisabled, onItemSelectAll, onItemSelect }">
+                            <a-table
+                                :row-selection="getRowSelection({ disabled: listDisabled, selectedKeys, onItemSelectAll, onItemSelect })"
+                                :columns="direction === 'left' ? leftColumns : rightColumns"
+                                :data-source="filteredItems"
+                                size="small"
+                                :style="{ pointerEvents: listDisabled ? 'none' : null }"
+                                :custom-row="({ key, disabled: itemDisabled }) => ({
+            onClick: () => { if (itemDisabled || listDisabled) return; onItemSelect(key, !selectedKeys.includes(key)); } })"
+                            />
+                        </template>
+                    </a-transfer>
+
+                    <a-switch v-model:checked="disabled" un-checked-children="disabled" checked-children="disabled" style="margin-top: 16px" />
+                    <a-switch v-model:checked="showSearch" un-checked-children="showSearch" checked-children="showSearch" style="margin-top: 16px" />
+                </div>
+            </template>
+        </div>
+
     </div>
 </template>
 <script lang="js">
-import { fetchContractDetails } from "@/apis/contracts";
-import { PlusOutlined } from '@ant-design/icons-vue';
+import {fetchContractDetails} from "@/apis/contracts";
+import {FolderOutlined, PlusOutlined} from '@ant-design/icons-vue';
 import gantt from "@/assets/js/dhtmlxgantt.js";
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
-// import {getTaskDetails} from "@/apis/tasks";
+import {Draggable, OpenIcon} from '@he-tree/vue'
+import '@he-tree/vue/style/default.css'
+import '@he-tree/vue/style/material-design.css'
+
 dayjs.extend(relativeTime);
 
 export default {
     name: "ContractDetails",
     props: ["id"],
+
+    components: {
+        PlusOutlined,
+        Draggable,
+        OpenIcon,
+        FolderOutlined,
+    },
     data() {
         return {
             contract: null, // Dữ liệu hợp đồng
             treeData: [], // Dữ liệu cây cho a-tree
+            treeData2: [], // Dữ liệu cây cho a-tree
             expandedKeys: [], // Danh sách các key của node được mở
             showLine: true, // Hiển thị đường kẻ trong cây
             showIcon: false, // Hiển thị icon trong cây
@@ -221,6 +284,37 @@ export default {
                 },
             ],
 
+            task1: [
+                { key: "1", title: "Task 1", is_temporary: 1 },
+                { key: "2", title: "Task 2", is_temporary: 1 },
+                { key: "3", title: "Task 3", is_temporary: 1 },
+                { key: "4", title: "Task 4", is_temporary: 1 },
+            ],
+            task2: [],
+            targetKeys: [], // Danh sách chứa task đã chuyển sang bên phải
+            disabled: false,
+            showSearch: false,
+            leftColumns: [
+                {
+                    dataIndex: "title",
+                    title: "Task Name",
+                },
+                {
+                    dataIndex: "is_temporary",
+                    title: "temporary",
+                },
+            ],
+            // Cột bên phải sử dụng template slot
+            rightColumns: [
+                {
+                    title: "Task Name",
+                    key: "title",
+                    customRender: () => {
+                        return `<span>{{ record.title }} - (Temporary: {{ record.is_temporary === 0 ? 'No' : 'Yes' }})</span>`
+                    }
+                },
+            ],
+
         };
     },
 
@@ -229,59 +323,12 @@ export default {
     },
 
     mounted() {
-        // this.checkTaskInUrl(); // Kiểm tra khi trang được tải
         // Tự động gọi khi component được mount
         this.autoSelectTaskFromUrl();
     },
 
     computed: {
         // Dữ liệu hợp đồng chuyển thành data source cho bảng
-        contractData() {
-            return [
-                { key: "1", label: "Mã hợp đồng", value: this.contract.contract_code },
-                { key: "2", label: "Tên hợp đồng", value: this.contract.contract_name },
-                { key: "3", label: "Ngày bắt đầu", value: this.contract.start_date },
-                { key: "4", label: "Ngày kết thúc", value: this.contract.end_date || "Chưa kết thúc" },
-                { key: "5", label: "Tổng giá trị", value: this.contract.total_amount },
-                {
-                    key: "6",
-                    label: "Trạng thái",
-                    value: this.contract.status, // Chỉ lưu trạng thái (active/closed)
-                },
-            ];
-        },
-        // Cấu hình cột
-        // columns() {
-        //     return [
-        //         { title: "Thông tin", dataIndex: "label", key: "label" },
-        //         {
-        //             title: "Giá trị",
-        //             dataIndex: "value",
-        //             key: "value",
-        //             customCell: ({ record }) => {
-        //                 if (record.label === "Trạng thái") {
-        //                     return {
-        //                         style: {}, // Bạn có thể tùy chỉnh style nếu cần
-        //                         children: (
-        //                             <a-tag color={record.value === "active" ? "green" : "red"}>
-        //                                 {record.value === "active" ? "Active" : "Closed"}
-        //                             </a-tag>
-        //                         ),
-        //                     };
-        //                 }
-        //                 return {
-        //                     children: record.value, // Trả về giá trị thông thường
-        //                 };
-        //             },
-        //         },
-        //     ];
-        // }
-
-
-    },
-
-    components: {
-        PlusOutlined,
     },
 
     methods: {
@@ -309,19 +356,6 @@ export default {
             console.log('params', params)
             return params.get("task"); // Lấy giá trị của task
         },
-        // Kiểm tra task có tồn tại không và hiển thị modal
-        async checkTaskInUrl() {
-
-            const taskId = this.getTaskFromUrl(); // Lấy ID task từ URL
-            // const contract = await getTaskDetails(taskId); // Gọi API
-            // console.log('contract', contract);
-            if (taskId) {
-                this.isModalVisible = true; // Hiển thị modal
-                // Tìm task trong danh sách
-                // const task = contract.tasks.find((t) => t.id === parseInt(taskId));
-            }
-        },
-
 
         // Gọi API để lấy thông tin hợp đồng và xây dựng dữ liệu cây
         async fetchContractDetailsAndTasks() {
@@ -331,6 +365,9 @@ export default {
                 if (contract && contract.tasks) {
                     // Xây dựng dữ liệu cây từ danh sách task
                     this.treeData = this.buildTree(contract.tasks);
+                    this.treeData2 = this.buildTree2(contract.tasks);
+                    console.log('treeData', this.treeData)
+                    console.log('treeData2', this.treeData2)
                     // Lấy tất cả key để mở rộng node
                     this.expandedKeys = this.getAllKeys(contract.tasks);
 
@@ -349,6 +386,16 @@ export default {
                 .filter(task => task.parent === parent) // Lọc các node con
                 .map(task => ({
                     title: task.text, // Hiển thị tên node
+                    key: task.id, // ID duy nhất của node
+                    children: this.buildTree(tasks, task.id), // Đệ quy tìm các node con
+                }));
+        },
+
+        buildTree2(tasks, parent = "0") {
+            return tasks
+                .filter(task => task.parent === parent) // Lọc các node con
+                .map(task => ({
+                    text: task.text, // Hiển thị tên node
                     key: task.id, // ID duy nhất của node
                     children: this.buildTree(tasks, task.id), // Đệ quy tìm các node con
                 }));
@@ -375,11 +422,18 @@ export default {
 
         // Sự kiện khi chọn node trong cây
         onSelect(selectedKeys, info) {
-            // const selectedKey = selectedKeys[0]; // Lấy key của node được chọn
             const selectedNode = info.node; // Node được chọn
             this.selectedTask = {
                 title: selectedNode.title,
                 key: selectedNode.key,
+            }; // Lưu thông tin node được chọn
+            this.isModalVisible = true; // Hiển thị modal
+        },
+
+        showPopup(node) {
+            this.selectedTask = {
+                title: node.text,
+                key: node.key,
             }; // Lưu thông tin node được chọn
             this.isModalVisible = true; // Hiển thị modal
         },
@@ -398,18 +452,13 @@ export default {
             }
             return null; // Không tìm thấy
         },
-
-
         // Hàm tự động select node dựa vào query string
         autoSelectTaskFromUrl() {
             const task = this.$route.query.task; // Lấy giá trị task từ query string
             if (task) {
                 this.isModalVisible = true; // Hiển thị modal
-
                 // Dùng hàm đệ quy để tìm node
                 const taskNode = this.findNodeByKey(this.treeData, task);
-                console.log("taskNode", taskNode);
-
                 if (taskNode) {
                     // Mở rộng key và gọi sự kiện onSelect
                     this.expandedKeys = this.getAllKeysAuto(this.treeData); // Mở rộng toàn bộ cây
@@ -426,7 +475,6 @@ export default {
             }
         }
         ,
-
         // Đóng modal
         closeModal() {
             this.isModalVisible = false;
@@ -434,7 +482,7 @@ export default {
 
         // Điều hướng quay lại danh sách hợp đồng
         goBackToContracts() {
-            this.$router.push({ path: "/dashboard/contracts" }); // Điều hướng về danh sách hợp đồng
+            this.$router.push({path: "/dashboard/contracts"}); // Điều hướng về danh sách hợp đồng
         },
 
         // Điều hướng sang trang Gantt Chart
@@ -442,7 +490,7 @@ export default {
             const contractId = this.$route.params.id; // Lấy contract ID từ URL hiện tại
             if (contractId) {
                 this.reloadGanttData();
-                this.$router.push({ name: "SalesContract", params: { id: contractId } });
+                this.$router.push({name: "SalesContract", params: {id: contractId}});
             } else {
                 console.error("Contract ID not found in the URL.");
             }
@@ -491,21 +539,53 @@ export default {
                 this.contract_details = await fetchContractDetails(contractId);
                 // Nạp dữ liệu vào Gantt
                 gantt.clearAll(); // Xóa dữ liệu cũ
-                gantt.parse({ data: this.contract_details.tasks }); // Nạp dữ liệu mới
+                gantt.parse({data: this.contract_details.tasks}); // Nạp dữ liệu mới
             } catch (error) {
                 console.error("Failed to fetch data:", error);
             } finally {
                 this.loading = false; // Kết thúc trạng thái loading
             }
         },
+        // Hàm gọi khi có sự thay đổi trong targetKeys (danh sách các task đã được chuyển)
+        // Hàm gọi khi có sự thay đổi trong targetKeys (danh sách các task đã được chuyển)
+        onChange(nextTargetKeys) {
+            this.targetKeys = nextTargetKeys;
 
+            // Cập nhật trạng thái is_temporary khi chuyển task sang phải
+            this.task1.forEach((task) => {
+                if (nextTargetKeys.includes(task.key)) {
+                    // Nếu task đã được chuyển sang task2, set is_temporary = 0
+                    task.is_temporary = 0;
+                }
+            });
+
+            // Cập nhật lại danh sách task2 với các task đã được chuyển
+            this.task2 = this.task1.filter((task) => nextTargetKeys.includes(task.key));
+        },
+        // Hàm lấy dữ liệu row selection cho cả 2 bảng (trái và phải)
+        getRowSelection({ disabled, selectedKeys, onItemSelectAll, onItemSelect }) {
+            return {
+                getCheckboxProps: (item) => ({
+                    disabled: disabled || item.disabled,
+                }),
+                onSelectAll(selected, selectedRows) {
+                    const treeSelectedKeys = selectedRows
+                        .filter((item) => !item.disabled)
+                        .map(({ key }) => key);
+                    onItemSelectAll(treeSelectedKeys, selected);
+                },
+                onSelect({ key }, selected) {
+                    onItemSelect(key, selected);
+                },
+                selectedRowKeys: selectedKeys,
+            };
+        },
     },
 };
 </script>
 
 
-
-<style scoped>
+<style>
 .table-actions {
     margin-top: 16px;
     text-align: right;
@@ -517,6 +597,7 @@ export default {
     align-items: center;
     min-height: 200px;
 }
+
 /* Định nghĩa chung cho trạng thái */
 .status-tag {
     padding: 2px 8px;
@@ -541,4 +622,106 @@ export default {
 .back-button {
     margin-right: 10px;
 }
+
+/* Toàn bộ container của Tree */
+.vtlist {
+    font-family: Arial, sans-serif;
+    font-size: 14px;
+    color: #333;
+    background-color: #f9f9f9;
+    border-radius: 8px;
+    padding: 10px;
+    border: 1px solid #ddd;
+    overflow: auto;
+    max-width: 400px;
+}
+
+/* Node cơ bản */
+.tree-node {
+    display: flex;
+    align-items: center;
+    position: relative;
+    padding-left: 10px;
+    transition: all 0.3s ease;
+}
+
+/* Đường kết nối ngang và dọc giữa các node */
+
+
+/* Node nội dung */
+.tree-node-inner {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    padding: 5px 0;
+    border-radius: 5px;
+    transition: all 0.3s ease;
+    width: 100%;
+}
+
+.tree-node-inner:hover {
+    background-color: #f0f0f0;
+}
+
+/* Icon mở rộng / thu nhỏ */
+.he-tree__open-icon {
+    margin-right: 5px;
+    cursor: pointer;
+    transition: transform 0.3s ease;
+}
+
+/* Icon mặc định */
+.tree-node-inner .anticon {
+    font-size: 16px;
+    color: #555;
+}
+
+/* Checkbox */
+.mtl-checkbox {
+    margin-right: 12px;
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+}
+
+/* Text */
+.mtl-checkbox {
+    margin-right: 10px;
+}
+
+.mtl-ml {
+    margin-left: 5px;
+    color: #333;
+    font-weight: 500;
+}
+
+.info-right {
+    width: 100%;
+}
+
+/* Highlight node khi được chọn */
+.tree-node-inner.selected {
+    background-color: #d9f7be;
+    border: 1px solid #91d5ff;
+}
+
+/* Styling scrollbar cho Tree View */
+.vtlist::-webkit-scrollbar {
+    width: 8px;
+}
+
+.vtlist::-webkit-scrollbar-thumb {
+    background-color: #bbb;
+    border-radius: 4px;
+}
+
+.vtlist::-webkit-scrollbar-thumb:hover {
+    background-color: #888;
+}
+
+.vtlist::-webkit-scrollbar-track {
+    background-color: #f1f1f1;
+}
+
+
 </style>

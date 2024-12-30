@@ -9,6 +9,10 @@
                 <user-outlined />
                 <span>Dashboard</span>
             </a-menu-item>
+            <a-menu-item key="6" @click="navigateToContracts">
+                <file-done-outlined />
+                <span>Hợp đồng</span>
+            </a-menu-item>
             <a-menu-item key="8" @click="navigateToPendingTasks">
                 <clock-circle-outlined />
                 <span>Đầu việc chờ</span>
@@ -17,10 +21,6 @@
             <a-menu-item key="9" @click="navigateToBidding">
                 <solution-outlined />
                 <span>Đấu thầu</span>
-            </a-menu-item>
-            <a-menu-item key="6" @click="navigateToContracts">
-                <file-done-outlined />
-                <span>Hợp đồng</span>
             </a-menu-item>
             <a-menu-item key="7" @click="navigateToCustomers">
                 <team-outlined />

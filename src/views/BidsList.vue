@@ -104,10 +104,10 @@
 </template>
 
 <script>
-import { fetchBids, createBid, deleteBid } from "@/apis/bids";
-import { DeleteOutlined, EditOutlined, PlusOutlined } from "@ant-design/icons-vue";
-import { h } from "vue";
-import { message } from "ant-design-vue";
+import {createBid, deleteBid, fetchBids} from "@/apis/bids";
+import {DeleteOutlined, EditOutlined, PlusOutlined} from "@ant-design/icons-vue";
+import {h} from "vue";
+import {message} from "ant-design-vue";
 
 export default {
     name: "BidsList",
@@ -181,8 +181,8 @@ export default {
         async loadBids() {
             try {
                 this.loading = true;
-                const bids = await fetchBids(); // Gọi API lấy danh sách gói thầu
-                this.bids = bids;
+                 // Gọi API lấy danh sách gói thầu
+                this.bids = await fetchBids();
             } catch (error) {
                 this.$message.error("Không thể tải danh sách gói thầu.");
                 console.error(error);

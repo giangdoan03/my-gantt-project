@@ -82,7 +82,6 @@
                 </a-row>
             </a-form>
         </a-modal>
-
         <!-- Bảng đầu việc -->
         <a-table
             :columns="columns"
@@ -94,6 +93,7 @@
             :scroll="{ x: 800 }"
         >
             <template v-slot:bodyCell="{ column, record }">
+                <!-- Cột Hành Động -->
                 <template v-if="column && column.key === 'actions'">
                     <a-space>
                         <!-- Nút Sửa -->
@@ -117,13 +117,54 @@
                         </a-tooltip>
                     </a-space>
                 </template>
+
+                <!-- Cột Owner Details (Nhóm Avatar) -->
+                <template v-else-if="column && column.key === 'owner_details'">
+                    <a-avatar-group>
+                        <!-- Hiển thị từng avatar -->
+                        <template v-for="(owner, index) in record.owner_details" :key="index">
+                            <!-- Tooltip bao quanh Avatar -->
+                            <a-tooltip :title="owner.name">
+                                <!-- Avatar với hình ảnh -->
+                                <a-avatar
+                                    v-if="owner.type === 'image'"
+                                    :src="owner.src"
+                                />
+
+                                <!-- Avatar với chữ -->
+                                <a-avatar
+                                    v-else-if="owner.type === 'text'"
+                                    :style="{ backgroundColor: owner.backgroundColor }"
+                                >
+                                    {{ owner.name.charAt(0).toUpperCase() }}
+                                </a-avatar>
+                            </a-tooltip>
+                        </template>
+                    </a-avatar-group>
+                </template>
+
+                <!-- Cột Ưu Tiên -->
+                <template v-else-if="column && column.key === 'priority'">
+                    <span>{{ record.priority?.label || "N/A" }}</span>
+                </template>
+
+                <!-- Cột Trạng Thái -->
+                <template v-else-if="column && column.key === 'status'">
+                    <a-tag
+                        :color="getStatusColor(record.status)"
+                    style="text-transform: capitalize;"
+                    >
+                    {{ record.status }}
+                    </a-tag>
+                </template>
             </template>
+
         </a-table>
     </div>
 </template>
 
 <script>
-import { getTasks, createTask, deleteTask } from "@/apis/tasks";
+import { createTask, deleteTask, getTemporaryTasks} from "@/apis/tasks";
 import { UserOutlined, AntDesignOutlined, DeleteOutlined, PlusOutlined, EditOutlined } from "@ant-design/icons-vue";
 import { h } from "vue";
 import { message } from "ant-design-vue";
@@ -155,6 +196,7 @@ export default {
                 status: "Đang chờ xử lý",
                 cancel_reason: "",
             }, // Dữ liệu đầu việc mới
+            colors: ["pink", "red", "orange", "green", "cyan", "blue", "purple"], // Danh sách màu
             columns: [
                 {
                     title: "Tên Đầu Việc",
@@ -200,6 +242,11 @@ export default {
                     }
                 },
                 {
+                    title: "Trạng Thái",
+                    dataIndex: "status",
+                    key: "status",
+                },
+                {
                     title: "Ưu Tiên",
                     dataIndex: "priority",
                     key: "priority",
@@ -220,20 +267,28 @@ export default {
                     task.assigned_to.toLowerCase().includes(this.searchKeyword.toLowerCase())
             );
         },
+
     },
     methods: {
-        generateRandomColor(name) {
-            const colors = ["#f56a00", "#87d068", "#1890ff", "#ff4d4f", "#faad14"];
-            let hash = 0;
-            for (let i = 0; i < name.length; i++) {
-                hash = name.charCodeAt(i) + ((hash << 5) - hash);
+
+        getStatusColor(status) {
+            switch (status) {
+                case "pending":
+                    return "orange"; // Màu Ant Design Vue
+                case "in-progress":
+                    return "blue"; // Màu Ant Design Vue
+                case "completed":
+                    return "green"; // Màu Ant Design Vue
+                case "cancelled":
+                    return "red"; // Màu Ant Design Vue
+                default:
+                    return "default"; // Mặc định
             }
-            return colors[Math.abs(hash) % colors.length];
         },
         async loadTasks() {
             try {
                 this.loading = true;
-                const tasks = await getTasks(); // Gọi API lấy danh sách đầu việc
+                const tasks = await getTemporaryTasks(); // Gọi API lấy danh sách đầu việc
                 console.log('tasks', tasks)
                 this.tasks = tasks;
             } catch (error) {
@@ -292,7 +347,7 @@ export default {
 };
 </script>
 
-<style scoped>
+<style>
 .tasks-list {
     padding: 24px;
     background: #fff;
@@ -304,5 +359,25 @@ export default {
     justify-content: space-between;
     align-items: center;
     margin-bottom: 20px;
+}
+
+.custom-orange {
+    background-color: #FFA500; /* Màu cam */
+    color: white; /* Màu chữ */
+}
+
+.custom-blue {
+    background-color: #1E90FF; /* Màu xanh dương */
+    color: white; /* Màu chữ */
+}
+
+.custom-green {
+    background-color: #32CD32; /* Màu xanh lá */
+    color: white; /* Màu chữ */
+}
+
+.custom-red {
+    background-color: #FF4500; /* Màu đỏ cam */
+    color: white; /* Màu chữ */
 }
 </style>
