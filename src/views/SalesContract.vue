@@ -32,7 +32,10 @@ export default {
     methods: {
         goBackToContract() {
             // Điều hướng quay về thông tin hợp đồng
-            this.$router.push(`/contracts/${this.id}`); // Sử dụng Vue Router
+            this.$router.push({
+                name: "ContractDetails", // Tên route được định nghĩa trong router
+                params: { id: this.id }, // Truyền tham số id
+            });
         },
     },
 };

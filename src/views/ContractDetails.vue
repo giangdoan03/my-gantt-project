@@ -25,7 +25,7 @@
                             {{ contract.end_date || "Chưa kết thúc" }}
                         </a-descriptions-item>
                         <a-descriptions-item label="Tổng giá trị">
-                            {{ contract.total_amount }}
+                            {{ formatNumber(contract.total_amount) }}
                         </a-descriptions-item>
                         <a-descriptions-item label="Trạng thái">
                             <a-tag color="green" v-if="contract.status === 'active'">Active</a-tag>
@@ -41,53 +41,104 @@
             </div>
         </a-card>
 
-
         <div style="margin-top: 20px;">
             <div>
                 <a-card title="Kế hoạch triển khai - Tổng hợp file báo cáo" bordered>
-                    <!--                    <template #extra>-->
-                    <!--                        <a-button type="primary" @click="navigateToGanttChart">-->
-                    <!--                            Xem Biểu Đồ Gantt-->
-                    <!--                        </a-button>-->
-                    <!--                    </template>-->
-                    <!--                    <a-tree-->
-                    <!--                        :show-line="showLine"-->
-                    <!--                        :show-icon="showIcon"-->
-                    <!--                        :tree-data="treeData"-->
-                    <!--                        :expanded-keys="expandedKeys"-->
-                    <!--                        @select="onSelect"-->
-                    <!--                    />-->
-                    <a-row gutter={16}>
-                        <a-col :span="12">
-                            <a-table :row-selection="rowSelection" :columns="columns2" :data-source="tasks">
-                                <template #bodyCell="{ column, text }">
+                    <a-row :gutter='16' style="justify-content: space-between">
+                        <a-col :span="11">
+                            <p>
+                                <Unordered-list-outlined />
+                               <strong> Đầu việc chờ</strong>
+                            </p>
+                            <a-table :row-selection="rowSelection" :columns="columns" :data-source="tasks" bordered>
+                                <template #bodyCell="{ column, record }">
                                     <template v-if="column.dataIndex === 'text'">
-                                        <a>{{ text }}</a>
+                                        <a>{{ record.text }}</a>
                                     </template>
+
+                                    <!-- Cột Owner Details (Nhóm Avatar) -->
+                                    <template v-else-if="column.dataIndex === 'owner_details'">
+                                        <a-avatar-group>
+                                            <!-- Hiển thị từng avatar -->
+                                            <template v-for="(owner, index) in record.owner_details" :key="index">
+                                                <!-- Tooltip bao quanh Avatar -->
+                                                <a-tooltip :title="owner.name">
+                                                    <!-- Avatar với hình ảnh -->
+                                                    <a-avatar
+                                                        v-if="owner.type === 'image'"
+                                                        :src="owner.src"
+                                                    />
+
+                                                    <!-- Avatar với chữ -->
+                                                    <a-avatar
+                                                        v-else-if="owner.type === 'text'"
+                                                        :style="{ backgroundColor: owner.backgroundColor }"
+                                                    >
+                                                        {{ owner.name.charAt(0).toUpperCase() }}
+                                                    </a-avatar>
+                                                </a-tooltip>
+                                            </template>
+                                        </a-avatar-group>
+                                    </template>
+                                    <!-- Cột Trạng Thái -->
+                                    <template v-else-if="column && column.dataIndex === 'status'">
+                                        <a-tag
+                                            :color="getStatusColor(record.status)"
+                                            style="text-transform: capitalize;"
+                                        >
+                                            {{ record.status }}
+                                        </a-tag>
+                                    </template>
+
                                 </template>
                             </a-table>
                         </a-col>
-
-                        <a-col :span="12">
-                            <Draggable class="mtl-tree" v-model="treeData2" treeLine>
-                                <template #default="{ node, stat }">
-                                    <OpenIcon
-                                        v-if="stat.children.length"
-                                        :open="stat.open"
-                                        class="mtl-mr"
-                                        @click="stat.open = !stat.open"
-                                    />
-                                    <input
-                                        class="mtl-checkbox mtl-mr"
-                                        type="checkbox"
-                                        v-model="stat.checked"
-                                    />
-                                    <div class="info-right" @click="showPopup(node)">
-                                        <folder-outlined />
-                                        <span class="mtl-ml w-100">{{ node.text }}</span>
-                                    </div>
-                                </template>
-                            </Draggable>
+                        <a-col :span="2" style="display: flex; justify-content: center; align-items: center;">
+                            <div>
+                                <a-button
+                                    style="margin-bottom: 10px"
+                                    :loading="loading"
+                                    @click="updateTasksStatus(0)">
+                                    <swap-right-outlined />
+                                </a-button>
+                                <br>
+                                <a-button
+                                    :loading="loading"
+                                    @click="updateTasksStatus(1)">
+                                    <swap-left-outlined/>
+                                </a-button>
+                            </div>
+                        </a-col>
+                        <a-col :span="10">
+                            <p style="display: flex; justify-content: space-between; align-items: center;">
+                                <span><Unordered-list-outlined />
+                                <strong style="margin-left: 3px">Đầu việc trong hợp đồng</strong></span>
+                                <a-button @click="navigateToGanttChart">
+                                    <BarChartOutlined />
+                                    Xem Biểu Đồ Gantt
+                                </a-button>
+                            </p>
+                            Checked: {{ checked }}
+                            <a-card bordered>
+                                <Draggable class="mtl-tree" v-model="treeData" ref="tree" @check:node="onCheckNode" treeLine>
+                                    <template #default="{ node, stat }">
+                                        <OpenIcon
+                                            v-if="stat.children.length"
+                                            :open="stat.open"
+                                            class="mtl-mr"
+                                            @click="stat.open = !stat.open"
+                                        />
+                                        <input
+                                            class="mtl-checkbox mtl-mr"
+                                            type="checkbox"
+                                            v-model="stat.checked"
+                                        />
+                                        <div class="info-right" @click="showPopup(node)">
+                                            <span class="mtl-ml w-100">{{ node.text }}</span>
+                                        </div>
+                                    </template>
+                                </Draggable>
+                            </a-card>
                         </a-col>
                     </a-row>
                 </a-card>
@@ -95,7 +146,7 @@
         </div>
 
         <!-- Popup hiển thị thông tin -->
-        <!--  tắt đóng mở modal      :maskClosable="false"-->
+        <!--  tắt đóng mở modal :maskClosable="false"-->
         <a-modal
             v-model:open="isModalVisible"
             title="Chi tiết Công Việc"
@@ -179,14 +230,15 @@
 </template>
 <script lang="js">
 import {fetchContractDetails} from "@/apis/contracts";
-import {FolderOutlined, PlusOutlined} from '@ant-design/icons-vue';
+import { UnorderedListOutlined, PlusOutlined, SwapLeftOutlined, BarChartOutlined, SwapRightOutlined} from '@ant-design/icons-vue';
 import gantt from "@/assets/js/dhtmlxgantt.js";
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
-import {Draggable, OpenIcon} from '@he-tree/vue'
-import '@he-tree/vue/style/default.css'
-import '@he-tree/vue/style/material-design.css'
-import {getTemporaryTasks} from "@/apis/tasks";
+import {Draggable, OpenIcon} from '@he-tree/vue';
+import '@he-tree/vue/style/default.css';
+import '@he-tree/vue/style/material-design.css';
+import { getOfficialTasks , getTemporaryTasks, updateTasksStatus} from "@/apis/tasks";
+import {h} from "vue";
 
 dayjs.extend(relativeTime);
 
@@ -198,23 +250,26 @@ export default {
         PlusOutlined,
         Draggable,
         OpenIcon,
-        FolderOutlined,
+        UnorderedListOutlined,
+        SwapRightOutlined,
+        SwapLeftOutlined,
+        BarChartOutlined
     },
     data() {
         return {
             contract: null, // Dữ liệu hợp đồng
             treeData: [], // Dữ liệu cây cho a-tree
-            treeData2: [], // Dữ liệu cây cho a-tree
-            expandedKeys: [], // Danh sách các key của node được mở
             showLine: true, // Hiển thị đường kẻ trong cây
             showIcon: false, // Hiển thị icon trong cây
             isModalVisible: false, // Trạng thái hiển thị modal
             selectedTask: null, // Dữ liệu công việc được chọn
             selectedKey: null, // Hoặc _selectedKey nếu muốn bỏ qua ESLint
-
-            tasks: '',
-
+            tasks: [],
             isPreviewVisible: false, // Hiển thị modal xem trước
+            loading: false,
+            selectedRowKeys: [],
+            selectedTaskIds: [], // Lưu các giá trị đã check
+            checked: [],
             fileList: [
                 {
                     uid: '-1',
@@ -246,59 +301,74 @@ export default {
             ], // Danh sách bình luận
             value: '', // Nội dung bình luận mới
             submitting: false, // Trạng thái gửi bình luận
-
             randomLetter: this.getRandomLetter(), // Lưu chữ cái ngẫu nhiên
             randomColor: this.getRandomColor(), // Lưu màu nền ngẫu nhiên
-
-            columns: [
-                {
-                    title: "Thông tin",
-                    dataIndex: "label",
-                    key: "label",
-                },
-                {
-                    title: "Chi tiết",
-                    dataIndex: "value",
-                    key: "value",
-                    customRender: (record) => {
-                        if (record.key === "status") {
-                            return `<span class="status-tag ${record.value === 'closed' ? 'status-active' : 'status-closed'}">${record.value === 'closed' ? 'closed' : 'Closed'}</span>`;
-                        }
-                        return record.value;
-                    },
-                },
-            ],
 
             rowSelection: {
                 onChange: (selectedRowKeys, selectedRows) => {
                     console.log(`selectedRowKeys: ${selectedRowKeys}`, 'selectedRows: ', selectedRows);
+                    this.selectedRowKeys = selectedRowKeys;  // Cập nhật selectedRowKeys vào state của component
                 },
                 getCheckboxProps: (record) => ({
                     disabled: record.name === 'Disabled User',
                     name: record.name,
                 }),
             },
-            columns2: [
+            columns: [
                 {
                     title: 'Tên đầu việc',
                     dataIndex: 'text', // This refers to the task name
                     key: 'text',
                 },
                 {
-                    title: 'Nội dung',
-                    dataIndex: 'description', // This will be custom content you can add
-                    key: 'description',
-                    render: (text, record) => {
-                        // You can return a custom description based on your task data
-                        return `Priority: ${record.priority.label}, Status: ${record.status}`;
+                    title: "Thực hiện",
+                    dataIndex: "owner_details",
+                    key: "owner_details",
+                    customRender: ({ record }) => {
+                        return h(
+                            "a-avatar-group",
+                            {}, // Thuộc tính của nhóm avatar
+                            record.owner_details.map((owner, index) =>
+                                h(
+                                    "a",
+                                    {
+                                        key: index,
+                                        href: "https://www.antdv.com", // URL liên kết (tùy chỉnh nếu cần)
+                                        target: "_blank", // Mở liên kết trong tab mới
+                                    },
+                                    h(
+                                        "a-avatar",
+                                        {
+                                            style: { backgroundColor: owner.backgroundColor || "#f56a00" }, // Sử dụng màu từ dữ liệu hoặc mặc định
+                                        },
+                                        owner.name.charAt(0).toUpperCase() // Lấy chữ cái đầu tiên của tên
+                                    )
+                                )
+                            )
+                        );
                     }
-                }
+                },
+                {
+                    title: 'Ngày tạo',
+                    dataIndex: 'start_date',
+                    key: 'start_date',
+                    render: (value) => {
+                        // Định dạng ngày thành dd-MM-yyyy
+                        return dayjs(value).format('DD-MM-YYYY');
+                    },
+                },
+                {
+                    title: "Trạng Thái",
+                    dataIndex: "status",
+                    key: "status",
+                },
             ],
         };
     },
 
     created() {
-        this.fetchContractDetailsAndTasks(); // Gọi API khi component được tạo
+        this.fetchContractDetailsAndTasks();
+        this.getOfficialTasks(); // Gọi API khi component được tạo
     },
 
     mounted() {
@@ -307,19 +377,76 @@ export default {
         this.loadTasks(); // Tải dữ liệu đầu việc khi component được mount
     },
 
+    watch: {
+        // Theo dõi sự thay đổi của selectedTaskIds
+        selectedTaskIds(newValue) {
+            console.log("Task IDs selected:", newValue);
+        },
+    },
+
     computed: {
         // Dữ liệu hợp đồng chuyển thành data source cho bảng
     },
 
     methods: {
+        onCheckNode() {
+            this.checked = this.$refs.tree.getChecked().map((v) => v.data.key)
+        },
+        formatNumber(value) {
+            return new Intl.NumberFormat('vi-VN').format(value);
+        },
+        getStatusColor(status) {
+            switch (status) {
+                case "pending":
+                    return "orange"; // Màu Ant Design Vue
+                case "in-progress":
+                    return "blue"; // Màu Ant Design Vue
+                case "completed":
+                    return "green"; // Màu Ant Design Vue
+                case "cancelled":
+                    return "red"; // Màu Ant Design Vue
+                default:
+                    return "default"; // Mặc định
+            }
+        },
         async loadTasks() {
             try {
                 this.loading = true;
                 const tasks = await getTemporaryTasks(); // Gọi API lấy danh sách đầu việc
                 console.log('tasks', tasks)
-                this.tasks = tasks;
+                // Thêm key duy nhất vào mỗi task
+                this.tasks = tasks.map((task, index) => ({
+                    ...task,
+                    key: task.id || index, // Sử dụng id nếu có, nếu không thì dùng index
+                }));
+
+                console.log('this.tasks', this.tasks)
             } catch (error) {
                 this.$message.error("Không thể tải danh sách đầu việc.");
+                console.error(error);
+            } finally {
+                this.loading = false;
+            }
+        },
+        // Hàm gọi API để cập nhật trạng thái task
+        async updateTasksStatus(isTemporary) {
+            console.log(isTemporary)
+            if (this.selectedRowKeys.length === 0) {
+                this.$message.warning('Vui lòng chọn ít nhất một task!');
+                return;
+            }
+            try {
+                this.loading = true;
+                // Gọi API với giá trị isTemporary truyền vào
+                const response = await updateTasksStatus(this.selectedRowKeys, isTemporary);  // Truyền isTemporary (1 hoặc 0)
+                if (response.success) {
+                    this.$message.success('Cập nhật trạng thái thành công!');
+                    await this.loadTasks();  // Gọi lại hàm tải task để lấy dữ liệu mới
+                } else {
+                    this.$message.error('Cập nhật trạng thái thất bại!');
+                }
+            } catch (error) {
+                this.$message.error('Có lỗi xảy ra khi cập nhật trạng thái.');
                 console.error(error);
             } finally {
                 this.loading = false;
@@ -343,33 +470,29 @@ export default {
             return colors[Math.floor(Math.random() * colors.length)];
         },
 
-        // Lấy tham số task từ URL
-        getTaskFromUrl() {
-            const params = new URLSearchParams(window.location.search);
-            console.log('params', params)
-            return params.get("task"); // Lấy giá trị của task
-        },
 
         // Gọi API để lấy thông tin hợp đồng và xây dựng dữ liệu cây
         async fetchContractDetailsAndTasks() {
             try {
-                const contract = await fetchContractDetails(this.id); // Gọi API
-                this.contract = contract; // Lưu thông tin hợp đồng
-                if (contract && contract.tasks) {
-                    // Xây dựng dữ liệu cây từ danh sách task
-                    this.treeData = this.buildTree(contract.tasks);
-                    this.treeData2 = this.buildTree2(contract.tasks);
-                    console.log('treeData', this.treeData)
-                    console.log('treeData2', this.treeData2)
-                    // Lấy tất cả key để mở rộng node
-                    this.expandedKeys = this.getAllKeys(contract.tasks);
-
-                    // Gọi autoSelectTaskFromUrl sau khi treeData đã được thiết lập
-                    this.autoSelectTaskFromUrl();
-                }
+                this.contract = await fetchContractDetails(this.id);
             } catch (error) {
                 console.error("Failed to fetch contract details:", error);
                 this.$message.error("Không thể tải thông tin hợp đồng!");
+            }
+        },
+
+        async getOfficialTasks() {
+            try {
+                this.loading = true;
+                const tasks = await getOfficialTasks(); // Gọi API lấy danh sách đầu việc
+                this.treeData = this.buildTree(tasks);
+                console.log('treeData', this.treeData);
+                this.autoSelectTaskFromUrl();
+            } catch (error) {
+                this.$message.error("Không thể tải danh sách đầu việc.");
+                console.error(error);
+            } finally {
+                this.loading = false;
             }
         },
 
@@ -378,49 +501,10 @@ export default {
             return tasks
                 .filter(task => task.parent === parent) // Lọc các node con
                 .map(task => ({
-                    title: task.text, // Hiển thị tên node
-                    key: task.id, // ID duy nhất của node
-                    children: this.buildTree(tasks, task.id), // Đệ quy tìm các node con
-                }));
-        },
-
-        buildTree2(tasks, parent = "0") {
-            return tasks
-                .filter(task => task.parent === parent) // Lọc các node con
-                .map(task => ({
                     text: task.text, // Hiển thị tên node
                     key: task.id, // ID duy nhất của node
                     children: this.buildTree(tasks, task.id), // Đệ quy tìm các node con
                 }));
-        },
-
-        // Lấy tất cả key của các node để mở rộng
-        getAllKeys(tasks) {
-            return tasks.map(task => task.id); // Trả về danh sách tất cả các ID
-        },
-
-        getAllKeysAuto(tasks) {
-            const keys = [];
-            const traverse = (nodes) => {
-                nodes.forEach((node) => {
-                    keys.push(node.key); // Thêm key của node hiện tại
-                    if (node.children && node.children.length > 0) {
-                        traverse(node.children); // Duyệt các node con
-                    }
-                });
-            };
-            traverse(tasks); // Bắt đầu duyệt từ gốc
-            return keys;
-        },
-
-        // Sự kiện khi chọn node trong cây
-        onSelect(selectedKeys, info) {
-            const selectedNode = info.node; // Node được chọn
-            this.selectedTask = {
-                title: selectedNode.title,
-                key: selectedNode.key,
-            }; // Lưu thông tin node được chọn
-            this.isModalVisible = true; // Hiển thị modal
         },
 
         showPopup(node) {
@@ -453,9 +537,6 @@ export default {
                 // Dùng hàm đệ quy để tìm node
                 const taskNode = this.findNodeByKey(this.treeData, task);
                 if (taskNode) {
-                    // Mở rộng key và gọi sự kiện onSelect
-                    this.expandedKeys = this.getAllKeysAuto(this.treeData); // Mở rộng toàn bộ cây
-
                     // Mô phỏng thông tin giống `info.node` từ onSelect
                     this.selectedTask = {
                         title: taskNode.title,
@@ -466,8 +547,7 @@ export default {
                     console.warn("Task không tồn tại trong treeData:", task);
                 }
             }
-        }
-        ,
+        },
         // Đóng modal
         closeModal() {
             this.isModalVisible = false;
@@ -530,7 +610,6 @@ export default {
             try {
                 const contractId = this.$route.params.id;
                 this.contract_details = await fetchContractDetails(contractId);
-                // Nạp dữ liệu vào Gantt
                 gantt.clearAll(); // Xóa dữ liệu cũ
                 gantt.parse({data: this.contract_details.tasks}); // Nạp dữ liệu mới
             } catch (error) {
@@ -545,6 +624,10 @@ export default {
 
 
 <style>
+
+a {
+    color: #000000;
+}
 .table-actions {
     margin-top: 16px;
     text-align: right;
@@ -587,11 +670,6 @@ export default {
     font-family: Arial, sans-serif;
     font-size: 14px;
     color: #333;
-    background-color: #f9f9f9;
-    border-radius: 8px;
-    padding: 10px;
-    border: 1px solid #ddd;
-    overflow: auto;
 }
 
 /* Node cơ bản */

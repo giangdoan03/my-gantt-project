@@ -29,6 +29,28 @@ export async function updateTask(taskId, taskData) {
     }
 }
 
+// Cập nhật trạng thái cho các task
+export async function updateTasksStatus(taskIds, isTemporary) {
+    try {
+        // Gửi yêu cầu API để cập nhật trạng thái của các task
+        const response = await axiosInstance.post('/tasks/update-tasks-status', {
+            taskIds: taskIds,      // Danh sách task IDs
+            isTemporary: isTemporary  // Trạng thái cần cập nhật (1 hoặc 0)
+        });
+
+        // Trả về phản hồi từ API
+        return response.data;
+    } catch (error) {
+        console.error(
+            "Failed to update tasks status:",
+            error.response?.data || error.message
+        );
+        // Ném lỗi để xử lý phía gọi hàm
+        throw error.response?.data || error.message;
+    }
+}
+
+
 // Xóa task
 export async function deleteTask(taskId) {
     try {
@@ -46,8 +68,8 @@ export async function deleteTask(taskId) {
 }
 
 
-export async function getTasks() {
-    const response = await axiosInstance.get("/tasks");
+export async function getOfficialTasks() {
+    const response = await axiosInstance.get("/tasks/official");
     return response.data.data;
 }
 
