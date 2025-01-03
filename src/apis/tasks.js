@@ -29,6 +29,19 @@ export async function updateTask(taskId, taskData) {
     }
 }
 
+// Cập nhật thứ tự task
+export async function saveTaskOrder(taskData) {
+    try {
+        const response = await axiosInstance.post(`/tasks/update-order`, taskData);
+        return response.data; // Trả về phản hồi từ API
+    } catch (error) {
+        console.error("Failed to update task order:", error.response?.data || error.message);
+        // Ném lỗi chi tiết để xử lý phía gọi hàm
+        throw error.response?.data || { message: error.message, status: error.response?.status };
+    }
+}
+
+
 // Cập nhật trạng thái cho các task
 export async function updateTasksStatus(taskIds, isTemporary) {
     try {

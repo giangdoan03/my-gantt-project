@@ -28,7 +28,7 @@ export default {
         // Lấy contract_id từ URL
         const path = window.location.pathname; // "/contracts/1/chart"
         const segments = path.split('/'); // ["", "contracts", "1", "chart"]
-        this.contractId = segments[2]; // Lấy contract_id từ URL
+        this.contractId = segments[3]; // Lấy contract_id từ URL
         // Gắn sự kiện click để xử lý các nút
         window.clickGridButton = this.clickGridButton.bind(this); // Bind this vào phương thức
     },
@@ -37,9 +37,8 @@ export default {
             console.log("Save button clicked in Lightbox", { id, task, is_new });
 
             // Nếu parent là 0, thay bằng root_id hoặc null
-            // Xử lý nếu parent là 0
             if (!task.parent || task.parent === 0 || task.parent === "0") {
-                task.parent = gantt.config.root_id || null; // Gán parent là root nếu không có cha
+                task.parent = gantt.config.root_id || 0; // Gán parent là root nếu không có cha
             }
 
             // Tính toán sort_order và wbs
@@ -47,7 +46,7 @@ export default {
             task.wbs = this.calculateWBS(id); // Tính wbs
 
             // Thêm contract_id từ URL vào task
-            task.contract_id = this.contractId;
+            task.contract_id = parseInt(this.contractId, 10);
             task.type = 'task';
 
             try {
@@ -58,8 +57,9 @@ export default {
                     response = await createTask(task);
                     console.log("Task created successfully:", response);
 
-                    if (response.data.id) {
-                        gantt.changeTaskId(id, response.data.id); // Đồng bộ ID thực từ backend
+                    if (response.data && response.data.id) {
+                        // Đồng bộ ID thực từ backend
+                        gantt.changeTaskId(id, response.data.id);
                     }
                 } else {
                     // Gửi yêu cầu cập nhật task
@@ -74,10 +74,16 @@ export default {
 
                 this.fetchData(); // Lấy dữ liệu từ API để đồng bộ
 
-                gantt.message({ type: "success", text: is_new ? "Task created successfully" : "Task updated successfully" });
+                gantt.message({
+                    type: "success",
+                    text: is_new ? "Task created successfully" : "Task updated successfully"
+                });
             } catch (error) {
                 console.error(is_new ? "Failed to create task:" : "Failed to update task:", error);
-                gantt.message({ type: "error", text: is_new ? "Failed to create task" : "Failed to update task" });
+                gantt.message({
+                    type: "error",
+                    text: is_new ? "Failed to create task" : "Failed to update task"
+                });
             }
 
             return true; // Cho phép xử lý mặc định
@@ -114,61 +120,6 @@ export default {
                 console.error(`Error fetching parent task with ID ${parent}:`, error);
                 return `${sortOrder}`; // Nếu có lỗi, trả về sortOrder
             }
-        },
-
-
-        async handleRowDragEnd(id, targetId, parentId, index) {
-            console.log("Row Drag Ended", { id, targetId, parentId, index });
-
-            // Lấy thông tin parentId nếu chưa có
-            if (!parentId) {
-                parentId = gantt.getParent(id); // Lấy giá trị parentId từ task
-            }
-
-            console.log("Determined parentId:", parentId);
-
-            try {
-                // Cập nhật parent và sort_order
-                await this.updateParentAndSortOrder(id, parentId);
-
-                // Gửi dữ liệu cập nhật lên server
-                await this.saveTaskToServer(id);
-
-                // Sắp xếp lại Gantt theo sort_order
-                gantt.sort("sort_order", false); // Sắp xếp theo sort_order tăng dần
-
-                gantt.message({ type: "success", text: "Task updated successfully" });
-            } catch (error) {
-                console.error("Failed to update task:", error);
-                gantt.message({ type: "error", text: "Failed to update task" });
-            }
-        },
-
-        async updateParentAndSortOrder(taskId, parentId) {
-            const task = gantt.getTask(taskId);
-            task.parent = parentId; // Cập nhật parent
-
-            // Lấy danh sách các task con cùng parent
-            const siblings = gantt.getChildren(parentId);
-
-            // Cập nhật sort_order theo thứ tự
-            siblings.forEach((siblingId, idx) => {
-                const siblingTask = gantt.getTask(siblingId);
-                siblingTask.sort_order = idx + 1; // Gán sort_order theo thứ tự mới
-                gantt.updateTask(siblingId); // Cập nhật lại task trong Gantt
-            });
-        },
-
-        async saveTaskToServer(taskId) {
-            const task = gantt.getTask(taskId);
-
-            // Gửi dữ liệu cập nhật lên server
-            let resulet = await updateTask(taskId, {
-                parent: task.parent,
-                sort_order: task.sort_order,
-            });
-
-            console.log('resulet', resulet)
         },
 
         handleAfterTaskUpdate(id, task) {
@@ -312,22 +263,17 @@ export default {
             ];
 
             gantt.config.drag_mode = {
-                move: true,     // Cho phép di chuyển task
-                resize: true,   // Cho phép thay đổi kích thước task
-                progress: true, // Cho phép thay đổi tiến độ task
+                move: false,     // Cho phép di chuyển task
+                resize: false,   // Cho phép thay đổi kích thước task
+                progress: false, // Cho phép thay đổi tiến độ task
             };
-            gantt.config.order_branch = true;  // Kéo thả trong cùng cấp
-            gantt.config.order_branch_free = true; // Kéo thả tự do giữa các cấp
-
+            gantt.config.order_branch = false;  // Kéo thả trong cùng cấp
+            gantt.config.order_branch_free = false; // Kéo thả tự do giữa các cấp
 
             // Bắt sự kiện lưu trong Lightbox
             gantt.attachEvent("onLightboxSave", this.handleLightboxSave);
-            // Đăng ký sự kiện kéo thả hàng (Row Drag End)
-            gantt.attachEvent("onRowDragEnd", this.handleRowDragEnd);
-
             // Tự động sắp xếp lại Gantt khi task được cập nhật
             gantt.attachEvent("onAfterTaskUpdate", this.handleAfterTaskUpdate);
-
 
             gantt.init("gantt_here");
             this.fetchData(); // Lấy dữ liệu từ API

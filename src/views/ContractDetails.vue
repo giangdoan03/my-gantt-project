@@ -47,10 +47,13 @@
                     <a-row :gutter='16' style="justify-content: space-between">
                         <a-col :span="11">
                             <p>
-                                <Unordered-list-outlined />
-                               <strong> Đầu việc chờ</strong>
+                                <a-tag class="title_tag" color="#2db7f5">
+                                    <Unordered-list-outlined />
+                                    <strong> Đầu việc chờ</strong>
+                                </a-tag>
                             </p>
-                            <a-table :row-selection="rowSelection" :columns="columns" :data-source="tasks" bordered>
+                            <a-divider />
+                            <a-table :row-selection="rowSelection" :columns="columns" :data-source="listTasksTemporary" bordered>
                                 <template #bodyCell="{ column, record }">
                                     <template v-if="column.dataIndex === 'text'">
                                         <a>{{ record.text }}</a>
@@ -111,16 +114,20 @@
                         </a-col>
                         <a-col :span="10">
                             <p style="display: flex; justify-content: space-between; align-items: center;">
-                                <span><Unordered-list-outlined />
-                                <strong style="margin-left: 3px">Đầu việc trong hợp đồng</strong></span>
+                                <a-tag class="title_tag" color="#2db7f5">
+                                    <span><Unordered-list-outlined />
+                                    <strong style="margin-left: 3px">Đầu việc trong hợp đồng</strong></span>
+                                </a-tag>
+
                                 <a-button @click="navigateToGanttChart">
                                     <BarChartOutlined />
                                     Xem Biểu Đồ Gantt
                                 </a-button>
                             </p>
-                            Checked: {{ checked }}
+                            <a-divider />
+<!--                            Checked: {{ checked }}-->
                             <a-card bordered>
-                                <Draggable class="mtl-tree" v-model="treeData" ref="tree" @check:node="onCheckNode" treeLine>
+                                <Draggable class="mtl-tree" v-model="treeData" ref="tree" @check:node="onCheckNode" @change="onDragChange"  treeLine>
                                     <template #default="{ node, stat }">
                                         <OpenIcon
                                             v-if="stat.children.length"
@@ -237,7 +244,8 @@ import relativeTime from 'dayjs/plugin/relativeTime';
 import {Draggable, OpenIcon} from '@he-tree/vue';
 import '@he-tree/vue/style/default.css';
 import '@he-tree/vue/style/material-design.css';
-import { getOfficialTasks , getTemporaryTasks, updateTasksStatus} from "@/apis/tasks";
+import { getOfficialTasks , getTemporaryTasks, updateTasksStatus, saveTaskOrder} from "@/apis/tasks";
+// import { getOfficialTasks , getTemporaryTasks} from "@/apis/tasks";
 import {h} from "vue";
 
 dayjs.extend(relativeTime);
@@ -264,12 +272,12 @@ export default {
             isModalVisible: false, // Trạng thái hiển thị modal
             selectedTask: null, // Dữ liệu công việc được chọn
             selectedKey: null, // Hoặc _selectedKey nếu muốn bỏ qua ESLint
-            tasks: [],
+            listTasksTemporary: [],
             isPreviewVisible: false, // Hiển thị modal xem trước
             loading: false,
             selectedRowKeys: [],
             selectedTaskIds: [], // Lưu các giá trị đã check
-            checked: [],
+            // checked: [],
             fileList: [
                 {
                     uid: '-1',
@@ -368,20 +376,17 @@ export default {
 
     created() {
         this.fetchContractDetailsAndTasks();
+        this.loadTemporaryTasks(); // Tải dữ liệu đầu việc khi component được mount
         this.getOfficialTasks(); // Gọi API khi component được tạo
     },
 
     mounted() {
         // Tự động gọi khi component được mount
         this.autoSelectTaskFromUrl();
-        this.loadTasks(); // Tải dữ liệu đầu việc khi component được mount
     },
 
     watch: {
-        // Theo dõi sự thay đổi của selectedTaskIds
-        selectedTaskIds(newValue) {
-            console.log("Task IDs selected:", newValue);
-        },
+
     },
 
     computed: {
@@ -390,7 +395,7 @@ export default {
 
     methods: {
         onCheckNode() {
-            this.checked = this.$refs.tree.getChecked().map((v) => v.data.key)
+            this.checked = this.$refs.tree.getChecked().map((v) => v.data.key);
         },
         formatNumber(value) {
             return new Intl.NumberFormat('vi-VN').format(value);
@@ -409,18 +414,15 @@ export default {
                     return "default"; // Mặc định
             }
         },
-        async loadTasks() {
+        async loadTemporaryTasks() {
             try {
                 this.loading = true;
                 const tasks = await getTemporaryTasks(); // Gọi API lấy danh sách đầu việc
-                console.log('tasks', tasks)
+                console.log('tasksxxx', tasks)
                 // Thêm key duy nhất vào mỗi task
-                this.tasks = tasks.map((task, index) => ({
-                    ...task,
-                    key: task.id || index, // Sử dụng id nếu có, nếu không thì dùng index
-                }));
+                this.listTasksTemporary = tasks;
 
-                console.log('this.tasks', this.tasks)
+                console.log('this.tasks', this.listTasksTemporary)
             } catch (error) {
                 this.$message.error("Không thể tải danh sách đầu việc.");
                 console.error(error);
@@ -428,20 +430,55 @@ export default {
                 this.loading = false;
             }
         },
+        async getOfficialTasks() {
+            try {
+                this.loading = true;
+                const tasks = await getOfficialTasks(); // Gọi API lấy danh sách đầu việc
+                const sortedTasks = tasks.sort((a, b) => a.wbs.localeCompare(b.wbs)); // Sắp xếp theo WBS nếu cần
+                this.treeData = this.buildTree(sortedTasks); // Xây dựng cấu trúc cây
+                console.log("treeData", this.treeData);
+            } catch (error) {
+                this.$message.error("Không thể tải danh sách đầu việc.");
+                console.error(error);
+            } finally {
+                this.loading = false;
+            }
+        },
+
+        // Chuyển đổi danh sách phẳng thành cấu trúc cây
+        buildTree(tasks, parent = "0") {
+            // Lọc các node con của parent hiện tại
+            const children = tasks
+                .filter(task => task.parent === parent)
+                .sort((a, b) => a.sort_order - b.sort_order); // Sắp xếp theo sort_order
+
+            // Xây dựng cấu trúc cây
+            return children.map(task => ({
+                text: task.text, // Hiển thị tên của node
+                key: task.id, // ID duy nhất của node
+                wbs: task.wbs, // Thêm WBS nếu cần hiển thị
+                children: this.buildTree(tasks, task.id), // Đệ quy tìm các node con
+            }));
+        },
         // Hàm gọi API để cập nhật trạng thái task
         async updateTasksStatus(isTemporary) {
+            // console.log('this.checked', this.checked)
+            // console.log('this.selectedRowKeys',this.selectedRowKeys);
             console.log(isTemporary)
+            if (isTemporary === 1 && this.checked.length > 0) {
+                this.selectedRowKeys = this.checked;
+            }
             if (this.selectedRowKeys.length === 0) {
                 this.$message.warning('Vui lòng chọn ít nhất một task!');
                 return;
             }
             try {
                 this.loading = true;
-                // Gọi API với giá trị isTemporary truyền vào
                 const response = await updateTasksStatus(this.selectedRowKeys, isTemporary);  // Truyền isTemporary (1 hoặc 0)
                 if (response.success) {
                     this.$message.success('Cập nhật trạng thái thành công!');
-                    await this.loadTasks();  // Gọi lại hàm tải task để lấy dữ liệu mới
+                    await this.loadTemporaryTasks();
+                    await this.getOfficialTasks();
                 } else {
                     this.$message.error('Cập nhật trạng thái thất bại!');
                 }
@@ -451,6 +488,34 @@ export default {
             } finally {
                 this.loading = false;
             }
+        },
+        async onDragChange() {
+            try {
+                this.loading = true;
+                const flatData = this.flattenTree(this.treeData); // Chuyển cây về danh sách phẳng
+                await saveTaskOrder(flatData); // Gửi danh sách lên backend
+                this.$message.success("Cập nhật vị trí thành công!");
+            } catch (error) {
+                this.$message.error("Cập nhật vị trí thất bại.");
+                console.error(error);
+            } finally {
+                this.loading = false;
+            }
+        },
+        flattenTree(tree, parent = "0") {
+            // Chuyển cấu trúc cây về danh sách phẳng với thông tin parent và thứ tự
+            const result = [];
+            tree.forEach((node, index) => {
+                result.push({
+                    id: node.key,
+                    parent,
+                    sort_order: index + 1, // Thứ tự mới
+                });
+                if (node.children) {
+                    result.push(...this.flattenTree(node.children, node.key));
+                }
+            });
+            return result;
         },
         // Hàm lấy một chữ cái in hoa ngẫu nhiên
         getRandomLetter() {
@@ -479,32 +544,6 @@ export default {
                 console.error("Failed to fetch contract details:", error);
                 this.$message.error("Không thể tải thông tin hợp đồng!");
             }
-        },
-
-        async getOfficialTasks() {
-            try {
-                this.loading = true;
-                const tasks = await getOfficialTasks(); // Gọi API lấy danh sách đầu việc
-                this.treeData = this.buildTree(tasks);
-                console.log('treeData', this.treeData);
-                this.autoSelectTaskFromUrl();
-            } catch (error) {
-                this.$message.error("Không thể tải danh sách đầu việc.");
-                console.error(error);
-            } finally {
-                this.loading = false;
-            }
-        },
-
-        // Chuyển đổi danh sách phẳng thành cấu trúc cây
-        buildTree(tasks, parent = "0") {
-            return tasks
-                .filter(task => task.parent === parent) // Lọc các node con
-                .map(task => ({
-                    text: task.text, // Hiển thị tên node
-                    key: task.id, // ID duy nhất của node
-                    children: this.buildTree(tasks, task.id), // Đệ quy tìm các node con
-                }));
         },
 
         showPopup(node) {
@@ -778,5 +817,8 @@ a {
     cursor: not-allowed;
 }
 
+.title_tag {
+    line-height: 32px;
+}
 
 </style>
