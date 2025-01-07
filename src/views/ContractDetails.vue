@@ -433,17 +433,25 @@ export default {
         async getOfficialTasks() {
             try {
                 this.loading = true;
-                const tasks = await getOfficialTasks(); // Gọi API lấy danh sách đầu việc
-                const sortedTasks = tasks.sort((a, b) => a.wbs.localeCompare(b.wbs)); // Sắp xếp theo WBS nếu cần
-                this.treeData = this.buildTree(sortedTasks); // Xây dựng cấu trúc cây
-                console.log("treeData", this.treeData);
+                const contractId = this.$route.params.id;
+                const tasks = await getOfficialTasks(contractId); // Gọi API lấy danh sách đầu việc
+
+                // Kiểm tra nếu tasks có dữ liệu mới xử lý tiếp
+                if (tasks && tasks.length > 0) {
+                    const sortedTasks = tasks.sort((a, b) => a.wbs.localeCompare(b.wbs)); // Sắp xếp theo WBS nếu cần
+                    this.treeData = this.buildTree(sortedTasks); // Xây dựng cấu trúc cây
+                    console.log("treeData", this.treeData);
+                } else {
+                    this.$message.info("Không có dữ liệu đầu việc.");
+                }
             } catch (error) {
                 this.$message.error("Không thể tải danh sách đầu việc.");
                 console.error(error);
             } finally {
                 this.loading = false;
             }
-        },
+        }
+        ,
 
         // Chuyển đổi danh sách phẳng thành cấu trúc cây
         buildTree(tasks, parent = "0") {

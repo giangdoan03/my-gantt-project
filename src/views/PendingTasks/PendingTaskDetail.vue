@@ -11,7 +11,7 @@
         <!-- Thông tin đầu việc -->
         <a-card title="Thông Tin Đầu Việc" class="info-card" v-if="task">
             <a-descriptions bordered :column="1">
-                <a-descriptions-item label="Tên Đầu Việc">{{ task.task_name }}</a-descriptions-item>
+                <a-descriptions-item label="Tên Đầu Việc">{{ task.text }}</a-descriptions-item>
                 <a-descriptions-item label="Người Phụ Trách">{{ task.assigned_to }}</a-descriptions-item>
                 <a-descriptions-item label="Mức Độ Ưu Tiên">{{ task.priority }}</a-descriptions-item>
                 <a-descriptions-item label="Ngày Hạn Cuối">{{ task.deadline }}</a-descriptions-item>
@@ -70,8 +70,8 @@
 </template>
 
 <script>
-import { message } from "ant-design-vue";
-import { getTaskDetails } from "@/apis/tasks"; // Import API để lấy dữ liệu đầu việc
+import {message} from "ant-design-vue";
+import {getTaskTemporaryDetails} from "@/apis/tasks"; // Import API để lấy dữ liệu đầu việc
 
 export default {
     name: "PendingTaskDetail",
@@ -100,8 +100,8 @@ export default {
         async loadTaskDetails(id) {
             this.loading = true;
             try {
-                const response = await getTaskDetails(id); // Gọi API lấy dữ liệu đầu việc
-                this.task = response; // Lưu chi tiết đầu việc
+                 // Gọi API lấy dữ liệu đầu việc
+                this.task = await getTaskTemporaryDetails(id); // Lưu chi tiết đầu việc
                 this.comments = [
                     // Dữ liệu mẫu nhận xét
                     { id: 1, content: "Nhận xét mẫu 1.", date: "2024-12-01" },
