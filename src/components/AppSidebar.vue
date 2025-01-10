@@ -31,6 +31,10 @@
                 <apartment-outlined />
                 <span>Phòng Ban</span>
             </a-menu-item>
+            <a-menu-item key="11" @click="navigateToDepartmentTasks">
+                <profile-outlined />
+                <span>Kế hoạch phòng</span>
+            </a-menu-item>
             <a-menu-item key="2" @click="navigateToChatRoom">
                 <message-outlined />
                 <span>Chat Room</span>
@@ -54,7 +58,7 @@
 
 
 <script>
-import { UserOutlined, MessageOutlined, FolderOutlined, TeamOutlined, UsergroupAddOutlined, FileDoneOutlined, DashboardOutlined, ClockCircleOutlined, SolutionOutlined, ApartmentOutlined  } from '@ant-design/icons-vue';
+import { UserOutlined, MessageOutlined, FolderOutlined, TeamOutlined, UsergroupAddOutlined, FileDoneOutlined, DashboardOutlined, ClockCircleOutlined, SolutionOutlined, ApartmentOutlined, ProfileOutlined  } from '@ant-design/icons-vue';
 
 
 export default {
@@ -69,7 +73,8 @@ export default {
         DashboardOutlined,
         ClockCircleOutlined,
         SolutionOutlined,
-        ApartmentOutlined
+        ApartmentOutlined,
+        ProfileOutlined
     },
     props: {
         collapsed: {
@@ -112,6 +117,9 @@ export default {
             this.$router.push({ name: "ListFileDepartment" }); // Điều hướng tới danh sách khách hàng
         },
         navigateToDepartments() {
+            this.$router.push({ name: "ListFileDepartment" }); // Điều hướng tới danh sách khách hàng
+        },
+        navigateToDepartmentTasks() {
             this.$router.push({ name: "ListFileDepartment" }); // Điều hướng tới danh sách khách hàng
         }
     },
