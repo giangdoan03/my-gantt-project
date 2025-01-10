@@ -81,8 +81,8 @@ export async function deleteTask(taskId) {
 }
 
 
-export async function getOfficialTasks() {
-    const response = await axiosInstance.get("/tasks/official");
+export async function getOfficialTasks(contractId) {
+    const response = await axiosInstance.get(`/tasks/official/${contractId}`);
     return response.data.data;
 }
 
@@ -95,6 +95,17 @@ export async function getTemporaryTasks() {
 export async function getTaskDetails(taskId) {
     try {
         const response = await axiosInstance.get(`/tasks/${taskId}`);
+        return response.data; // Trả về dữ liệu hợp đồng
+    } catch (error) {
+        console.error("Failed to fetch contract details:", error.response?.data || error.message);
+        throw error.response?.data || error.message;
+    }
+}
+
+// Lấy chi tiết task
+export async function getTaskTemporaryDetails(taskId) {
+    try {
+        const response = await axiosInstance.get(`/task-temporary/${taskId}`);
         return response.data; // Trả về dữ liệu hợp đồng
     } catch (error) {
         console.error("Failed to fetch contract details:", error.response?.data || error.message);
