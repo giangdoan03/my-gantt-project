@@ -148,6 +148,11 @@ const routes = [
                 name: "ListFileDepartment",
                 component: () => import("@/views/DepartmentFileArchive.vue"),
             },
+            {
+                path: "chat/",
+                name: "ChatApp",
+                component: () => import("@/views/Chats/ChatApp.vue"),
+            },
         ],
     },
 ];

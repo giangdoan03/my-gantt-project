@@ -114,7 +114,7 @@ export default {
             this.$router.push({ name: "BidsList" }); // Điều hướng đến route "Bidding"
         },
         navigateToChatRoom() {
-            this.$router.push({ name: "ListFileDepartment" }); // Điều hướng tới danh sách khách hàng
+            this.$router.push({ name: "ChatApp" }); // Điều hướng tới danh sách khách hàng
         },
         navigateToDepartments() {
             this.$router.push({ name: "ListFileDepartment" }); // Điều hướng tới danh sách khách hàng

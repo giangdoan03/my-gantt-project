@@ -4,6 +4,7 @@ import router from './router';
 import Antd from 'ant-design-vue';
 import 'ant-design-vue/es/style'; // Import đúng CSS cho Ant Design Vue 4
 import 'normalize.css';
+import 'bootstrap/dist/css/bootstrap.min.css'; // Import Bootstrap CSS
 import { createPinia } from "pinia";
 
 // Import Day.js và các plugin cần thiết
