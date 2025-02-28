@@ -35,22 +35,27 @@ export const deleteUser = async (userId) => {
 
 
 // Thêm người dùng mới
-export async function createUser(userData) {
+export async function createUser(formData) {
 	try {
-		const response = await axiosInstance.post("/users", userData);
-		console.log("User created:", userData);
-		return response.data; // Trả về phản hồi từ API
+		const response = await axiosInstance.post("/users", formData, {
+			headers: { 'Content-Type': 'multipart/form-data' }
+		});
+		console.log("User created:", response.data);
+		return response.data;
 	} catch (error) {
 		console.error("Failed to create user:", error.response?.data || error.message);
 		throw error.response?.data || error.message;
 	}
 }
 
-// Chỉnh sửa người dùng
-export async function updateUser(userId, userData) {
+
+// Cập nhật người dùng
+export async function updateUser(userId, formData) {
 	try {
-		const response = await axiosInstance.put(`/users/${userId}`, userData);
-		return response.data; // Trả về phản hồi từ API
+		const response = await axiosInstance.post(`/users/${userId}`, formData, {
+			headers: { 'Content-Type': 'multipart/form-data' }
+		});
+		return response.data;
 	} catch (error) {
 		console.error("Failed to update user:", error.response?.data || error.message);
 		throw error.response?.data || error.message;

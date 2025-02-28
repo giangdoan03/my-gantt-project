@@ -1,6 +1,6 @@
 <template>
     <div class="sidebar col-12 col-lg-5 col-xl-3 border-right">
-        <div class="">
+        <div class="sidebar_content xxxxxx">
             <div class="px-4 d-none d-md-block">
                 <div class="d-flex align-items-center">
                     <div class="flex-grow-1">

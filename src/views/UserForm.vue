@@ -30,6 +30,12 @@
                 </a-select>
             </a-form-item>
 
+            <!-- Avatar -->
+            <a-form-item label="Ảnh đại diện" name="avatar">
+                <input type="file" @change="handleFileChange" accept="image/*" />
+                <img v-if="previewImage || user.avatar" :src="avatarUrl" alt="Avatar preview" class="avatar-preview" />
+            </a-form-item>
+
             <!-- Nút hành động -->
             <a-form-item class="form-actions">
                 <a-button type="primary" html-type="submit">
@@ -44,7 +50,7 @@
 </template>
 
 <script>
-import {getUserById, createUser, updateUser} from "@/apis/users";
+import { getUserById, createUser, updateUser } from "@/apis/users";
 
 export default {
     data() {
@@ -55,61 +61,84 @@ export default {
                 password: "",
                 role: "",
             },
+            avatarFile: null,
+            previewImage: null,
+            baseUrl: 'http://localhost:8080' // Base URL của server
         };
     },
     computed: {
-        // Computed property để xác định xem có phải đang ở chế độ chỉnh sửa hay không
         isEdit() {
-            return !!this.$route.params.id; // Kiểm tra có ID hay không
+            return !!this.$route.params.id;
         },
-
-        // Rules của form
         formRules() {
             return {
-                name: [{required: true, message: 'Vui lòng nhập tên người dùng!'}],
-                email: [{type: 'email', required: true, message: 'Vui lòng nhập email hợp lệ!'}],
-                role: [{required: true, message: 'Vui lòng chọn vai trò!'}],
-                password: !this.isEdit ? [{required: true, message: 'Vui lòng nhập mật khẩu!'}] : [], // Chỉ validate password khi không phải ở chế độ chỉnh sửa
+                name: [{ required: true, message: 'Vui lòng nhập tên người dùng!' }],
+                email: [{ type: 'email', required: true, message: 'Vui lòng nhập email hợp lệ!' }],
+                role: [{ required: true, message: 'Vui lòng chọn vai trò!' }],
+                password: !this.isEdit ? [{ required: true, message: 'Vui lòng nhập mật khẩu!' }] : [],
             };
         },
+        avatarUrl() {
+            return this.previewImage ? this.previewImage : this.baseUrl + this.user.avatar;
+        }
     },
     methods: {
-        // Lấy thông tin người dùng khi chỉnh sửa
         async fetchUser() {
             try {
                 if (this.isEdit) {
-                    const {id} = this.$route.params;
+                    const { id } = this.$route.params;
                     const response = await getUserById(id);
-                    const userData = response.data.data; // Lấy dữ liệu từ API
+                    const userData = response.data.data;
 
-                    // Gán dữ liệu từ API vào `user`
                     this.user = {
                         name: userData.name,
                         email: userData.email,
                         role: userData.role,
-                        password: "", // Để trống trường mật khẩu
+                        password: "",
                     };
+                    if (userData.avatar) {
+                        this.previewImage = userData.avatar;
+                    }
                 }
             } catch (error) {
                 console.error("Error fetching user:", error);
                 this.$message.error("Không thể tải thông tin người dùng.");
             }
         },
+        handleFileChange(event) {
+            const file = event.target.files[0];
 
-        // Submit dữ liệu
+            this.avatarFile = file;
+
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    this.previewImage = e.target.result;
+                };
+                console.log('this.previewImage', this.previewImage)
+                reader.readAsDataURL(file);
+            }
+        },
         async handleSubmit() {
             try {
-                const payload = {...this.user};
-                if (!payload.password) {
-                    delete payload.password; // Xóa mật khẩu nếu để trống
+                const formData = new FormData();
+                formData.append('name', this.user.name);
+                formData.append('email', this.user.email);
+                formData.append('role', this.user.role);
+                if (this.user.password) {
+                    formData.append('password', this.user.password);
+                }
+                if (this.avatarFile) {
+                    formData.append('avatar', this.avatarFile);
                 }
 
                 if (this.isEdit) {
-                    const {id} = this.$route.params;
-                    await updateUser(id, payload); // Cập nhật người dùng
+                    console.log('formData',formData)
+                    const { id } = this.$route.params;
+                    await updateUser(id, formData);
                     this.$message.success("Người dùng đã được cập nhật!");
                 } else {
-                    await createUser(payload); // Thêm mới người dùng
+                    await createUser(formData);
                     this.$message.success("Người dùng đã được thêm mới!");
                 }
                 this.$router.push("/dashboard/users");
@@ -128,6 +157,13 @@ export default {
 </script>
 
 <style scoped>
+.avatar-preview {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    object-fit: cover;
+    margin-top: 10px;
+}
 /* Toàn bộ container */
 .user-form-container {
     padding: 20px;
