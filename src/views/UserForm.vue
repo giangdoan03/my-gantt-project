@@ -156,7 +156,8 @@ export default {
 };
 </script>
 
-<style scoped>
+<style>
+
 .avatar-preview {
     width: 100px;
     height: 100px;
