@@ -4,7 +4,7 @@
         <a-form @submit.prevent="handleSubmit" layout="vertical" class="custom-form" :model="user" :rules="formRules">
             <a-row :gutter="[16, 16]"> <!-- Row với khoảng cách 16px giữa các cột -->
                 <!-- Cột 1 -->
-                <a-col :span="12">
+                <a-col :span="12" :xs="24" :sm="12">
                     <!-- Tên người dùng -->
                     <a-form-item label="Tên người dùng" name="name">
                         <a-input v-model:value="user.name" placeholder="Nhập tên người dùng"/>
@@ -53,7 +53,7 @@
                 </a-col>
 
                 <!-- Cột 2 -->
-                <a-col :span="12">
+                <a-col :span="12" :xs="24" :sm="12">
                     <!-- Mật khẩu -->
                     <a-form-item label="Mật khẩu" name="password"
                                  :rules="!isEdit ? [{ required: true, message: 'Vui lòng nhập mật khẩu!' }] : []">

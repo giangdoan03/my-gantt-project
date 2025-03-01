@@ -12,30 +12,33 @@
 
         <!-- Bảng danh sách người dùng -->
         <a-table :columns="columns" :data-source="filteredUsers" :row-key="record => record.id" bordered>
-            <!-- Kiểm tra column và xác định cột "Hành động" -->
             <template v-slot:bodyCell="{ column, record }">
-                <template v-if="column && column.key === 'actions'">
+                <template v-if="column.key === 'avatar'">
+                    <a-avatar v-if="isValidUrl(record.avatar)" :src="record.avatar" :size="40" />
+                    <a-avatar v-else :style="{ backgroundColor: getRandomColor(record.name) }" :size="40">
+                        {{ getFirstLetter(record.name) }}
+                    </a-avatar>
+                </template>
+                <template v-if="column.key === 'actions'">
                     <a-space>
-                        <!-- Nút Sửa -->
                         <a-tooltip title="Sửa">
                             <a-button type="link" @click="editUser(record)">
-                                <edit-outlined/>
+                                <edit-outlined />
                             </a-button>
                         </a-tooltip>
-                        <!-- Nút Xóa -->
                         <a-tooltip title="Xóa">
                             <a-popconfirm title="Bạn có chắc muốn xóa người dùng này không?" ok-text="Xóa"
                                           cancel-text="Hủy" @confirm="deleteUser(record.id)">
                                 <a-button type="link" danger>
-                                    <delete-outlined/>
+                                    <delete-outlined />
                                 </a-button>
                             </a-popconfirm>
                         </a-tooltip>
-
                     </a-space>
                 </template>
             </template>
         </a-table>
+
 
 
     </div>
@@ -60,6 +63,11 @@ export default {
                     title: "#",
                     dataIndex: "id",
                     key: "id",
+                },
+                {
+                    title: "avatar",
+                    dataIndex: "avatar",
+                    key: "avatar",
                 },
                 {
                     title: "Tên người dùng",
@@ -96,6 +104,25 @@ export default {
         },
     },
     methods: {
+
+        // Kiểm tra xem avatar có phải URL hợp lệ không
+        isValidUrl(avatar) {
+            try {
+                return Boolean(new URL(avatar));
+            } catch (e) {
+                return false;
+            }
+        },
+        // Lấy chữ cái đầu tiên của tên
+        getFirstLetter(name) {
+            return name ? name.charAt(0).toUpperCase() : "?";
+        },
+        // Tạo màu ngẫu nhiên dựa trên tên
+        getRandomColor(name) {
+            const colors = ["#FF5733", "#33FF57", "#3357FF", "#F39C12", "#8E44AD", "#16A085", "#E74C3C", "#2ECC71", "#3498DB", "#E67E22"];
+            return colors[name.charCodeAt(0) % colors.length]; // Sinh màu dựa trên ký tự đầu tiên
+        },
+
         async fetchUsersData() {
             try {
                 const data = await fetchUsers(); // Gọi hàm API fetchUsers
